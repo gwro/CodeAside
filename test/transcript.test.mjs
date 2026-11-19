@@ -184,6 +184,25 @@ Enter to select · ↑/↓ to navigate · Esc to cancel`;
   assert.equal(readDialog(idle).kind, "input");
 });
 
+test("readDialog finds the input box when the rule above it runs into it", async () => {
+  const { showsWorking } = await import("../hub/pane.mjs");
+  // As the host reads Claude Code 2.1.328 at 200 columns: each full-width rule and
+  // the row under it come back as one line.
+  const rule = "─".repeat(200);
+  const idle = `● done\n✻ Sautéed for 18s\n${rule}❯ Try "how does <filepath> work?"\n${rule}  ⏵⏵ auto mode on (shift+tab to cycle) · ← for agents`;
+  assert.deepEqual(readDialog(idle), { kind: "input", options: [] });
+  assert.equal(showsWorking(idle), false);
+  const typed = `${" ".repeat(180)}◐ medium · /effort\n${rule}❯ some typed text\n${rule}  ⏵⏵ auto mode on (shift+tab to cycle)`;
+  assert.equal(readDialog(typed).kind, "input");
+  const working = `  ⎿  $ ping -n 16 127.0.0.1 (7s · 10 lines)\n✢ Forging… (10s · ↓ 96 tokens)\n${rule}❯\n${rule}  ⏵⏵ auto mode on (shift+tab to cycle) · esc to interrupt`;
+  assert.equal(readDialog(working).kind, "input");
+  assert.equal(showsWorking(working), true);
+  // A dialog under a rule is still the dialog.
+  const permission = `${rule} Bash command\n   touch made-by-test.txt\n Do you want to proceed?\n ❯ 1. Yes\n   2. No\n Esc to cancel · Tab to amend`;
+  assert.equal(readDialog(permission).kind, "permission");
+  assert.equal(readDialog(`reply text\n${rule}`).kind, "unknown", "a rule with nothing under it is no input box");
+});
+
 test("transcript cleanup drops sound-effect captions and silence hallucinations", async () => {
   const { cleanTranscript } = await import("../hub/stt.mjs");
   assert.equal(cleanTranscript("*phone rings*"), "");

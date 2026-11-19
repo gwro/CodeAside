@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "
 import { basename, join } from "node:path";
 import { CLAUDE_PROJECTS_DIR, STATE_FILE } from "./config.mjs";
 import { entryMeta, entryToItems, parseLine, readTailLines, toolLabel, TranscriptTail } from "./transcript.mjs";
-import { capture, paneAlive, paneKey, readDialog, readSuggestion, targetFromHook } from "./pane.mjs";
+import { capture, paneAlive, paneKey, readDialog, readSuggestion, showsWorking, targetFromHook } from "./pane.mjs";
 
 const MAX_ITEMS = 300;
 const HISTORY_ITEMS = 150; // how much history to load when the hub starts watching a session
@@ -365,7 +365,8 @@ export class Registry extends EventEmitter {
       if (s.pane && !alive) s.pane = null;
       if (alive && s.pane) {
         try {
-          const dialog = readDialog(await capture(s.pane, 40));
+          const screen = await capture(s.pane, 40);
+          const dialog = readDialog(screen);
           if (s.waiting) {
             // A waiting state with no dialog on screen is stale (answered at the desk,
             // declined, or interrupted without a hook). Clear it after two checks.
@@ -374,7 +375,8 @@ export class Registry extends EventEmitter {
             if (s.staleWaitingChecks >= 2) {
               s.waiting = null;
               s.staleWaitingChecks = 0;
-              if (s.state === "waiting") s.state = dialog.kind === "input" ? "idle" : "working";
+              // Approved at the desk, the tool may still be running under the input box.
+              if (s.state === "waiting") s.state = dialog.kind === "input" && !showsWorking(screen) ? "idle" : "working";
               this.changed(s);
             }
           } else if (dialog.kind === "permission" || dialog.kind === "question") {

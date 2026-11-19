@@ -535,6 +535,14 @@ already running needs no new code.
 
 Smaller findings:
 
+- A rule that fills the row comes back from the host's screen read joined to the
+  row under it, as one wrapped row, so the input box reads `────…────❯ text`.
+  `readDialog` looked for `❯` at the start of a line and never saw the box:
+  `waitForInput` always ran out its 20 seconds, and the sweep never cleared a
+  dialog answered at the desk. It now puts the line break back before reading.
+  The input box is also on screen during a turn, so the sweep takes "esc to
+  interrupt" in the footer as the sign that the session is working, not idle.
+
 - `cmd.exe` splits an unquoted argument at `&`. The sideload QR code lost the token
   that way, and the shell tried to run `token=...`. Commands that go through the
   shell on Windows, as `npx` must, are built as one quoted line.

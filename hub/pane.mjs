@@ -68,7 +68,10 @@ export async function capture(target, lines = 60) {
  * @returns {{kind: "permission"|"question"|"trust"|"input"|"unknown", options: string[]}}
  */
 export function readDialog(screen) {
-  const tail = screen.split("\n").filter((l) => l.trim()).slice(-30);
+  // A rule that fills the row comes back joined to the row under it, as one wrapped
+  // row, so the input box reads "────…────❯ text". Put the line break back.
+  const rows = String(screen).replace(/^(─{20,})(?!─)(?=.*\S)/gm, "$1\n");
+  const tail = rows.split("\n").filter((l) => l.trim()).slice(-30);
   const joined = tail.join("\n");
   const options = [];
   for (const l of tail) {
@@ -87,6 +90,15 @@ export function readDialog(screen) {
   if (!complete && options.length) return { kind: "unknown", options: [] };
   if (/^\s*❯\s*/m.test(tail.slice(-4).join("\n"))) return { kind: "input", options: [] };
   return { kind: "unknown", options: clean };
+}
+
+/**
+ * Whether the screen says a turn is running. The input box is on screen during a
+ * turn as well, and only the footer under it tells the two apart.
+ */
+export function showsWorking(screen) {
+  const tail = String(screen).split("\n").filter((l) => l.trim()).slice(-4);
+  return /esc to interrupt/.test(tail.join("\n"));
 }
 
 /** Whether text is dim after an SGR sequence with these parameters. */

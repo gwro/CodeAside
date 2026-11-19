@@ -17,6 +17,14 @@ is kept at the end for reference.
   2.1.328) move that dialog with the arrow key and no longer with `j`, the key
   the hub pressed. The hub now tries both and confirms only once "Yes, I trust
   this folder" has the focus.
+- The hub did not recognise Claude Code's input box in a session that runs in
+  the host: the screen read returns the full-width rule above the box and the
+  box as one line, and the hub looked for `❯` at the start of a line. A session
+  started from the glasses with a prompt therefore waited 20 seconds before the
+  prompt was typed, and a dialog answered or declined at the desk could stay on
+  the glasses until the session's next hook. Both now clear as intended. When
+  such a dialog is cleared, the session shows as working while the footer says
+  a turn is running, and as idle otherwise.
 
 ## 0.1.2
 

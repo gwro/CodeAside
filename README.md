@@ -307,11 +307,11 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `port` | 7717 | hub API on 127.0.0.1 |
 | `httpsPort` | 7443 | HTTPS port on your `*.ts.net` name |
 | `hookPort` | 7718 | hook intake on 127.0.0.1 |
-| `hostPipe` | `\\.\pipe\codeaside-host-<user>` | the session host's named pipe |
+| `hostPipe` | per user | the session host's named pipe; `\\.\pipe\codeaside-host-<user>` unless set |
 | `claudeArgs` | `[]` | extra arguments for sessions started from the glasses |
-| `whisperBin` | `%LOCALAPPDATA%\codeaside\whisper\whisper-server.exe` | whisper.cpp server, as installed by `setup-voice`; point it at your own build to use that instead |
-| `whisperThreads` | half the logical CPUs, 2 to 8 | CPU threads for transcription (CPU build) |
-| `sttVocabulary` | | words the speech model should expect |
+| `whisperBin` | installed | the whisper.cpp server; unless set, the `whisper-server.exe` that `setup-voice` puts in `%LOCALAPPDATA%\codeaside\whisper`. Point it at your own build to use that instead |
+| `whisperThreads` | auto | CPU threads for transcription (CPU build); unless set, half the logical CPUs, between 2 and 8 |
+| `sttVocabulary` | built in | words the speech model should expect; your project names are added to it |
 | `ntfyTopic` | empty | optional phone push through ntfy when a session finishes or needs you |
 | `preventSleep` | true | keep the PC awake (not the display) while the hub runs and the PC is on AC power |
 | `bindTailscaleIP` | false | also listen on the raw Tailscale IP over plain HTTP, for development |

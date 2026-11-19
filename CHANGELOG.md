@@ -5,6 +5,12 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
+## 0.1.1
+
+- README: the configuration table's Default column held two long paths that
+  could not wrap, which pushed the Purpose column off the page on npm. The
+  column now holds short values and the paths are in the text.
+
 ## 0.1.0
 
 First release: a Windows port of the hub and command-line tool of

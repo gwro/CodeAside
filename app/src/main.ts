@@ -9,13 +9,13 @@ import { InputRouter, type Action } from "./input.ts";
 import { BODY_INNER_W, HEADER_INNER_W } from "./display.ts";
 import { spread, wrap } from "./text.ts";
 
-const KEY = "glancecode.hub";
+const KEY = "codeaside.hub";
 const LEGACY_KEYS: string[] = [];
 declare const __APP_VERSION__: string;
 declare const __APP_BUILT__: string;
 declare const __APP_NAME__: string;
 export const VERSION = typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "dev";
-const APP_NAME = typeof __APP_NAME__ === "string" ? __APP_NAME__ : "GlanceCode";
+const APP_NAME = typeof __APP_NAME__ === "string" ? __APP_NAME__ : "CodeAside";
 
 async function readConfig(bridge: EvenAppBridge): Promise<HubConfig | null> {
   const params = new URLSearchParams(location.search);
@@ -127,11 +127,11 @@ async function main() {
   unpairButton.hidden = true;
   pairForm.hidden = false;
   demoButton.hidden = false;
-  status.textContent = "Not paired. On your computer run `glancecode pair` and paste the code below, or try the demo.";
+  status.textContent = "Not paired. On your computer run `codeaside pair` and paste the code below, or try the demo.";
   display.show({
     header: spread(APP_NAME, "not paired", HEADER_INNER_W),
     body: wrap(
-      "Pair with the hub on your computer: run glancecode pair and paste the code on your phone.\n\nTap to try the demo with sample sessions.\nDouble-tap to exit.",
+      "Pair with the hub on your computer: run codeaside pair and paste the code on your phone.\n\nTap to try the demo with sample sessions.\nDouble-tap to exit.",
       BODY_INNER_W,
     ),
   });

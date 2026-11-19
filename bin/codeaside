@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// glancecode: set up and run the hub, and start or attach Claude Code sessions in the host.
+// codeaside: set up and run the hub, and start or attach Claude Code sessions in the host.
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
@@ -133,7 +133,7 @@ const commands = {
       console.error("claude not found on PATH. Install Claude Code: https://claude.com/claude-code");
       process.exit(1);
     }
-    if (process.env.GLANCECODE_PANE) {
+    if (process.env.CODEASIDE_PANE) {
       // Already inside a host session: just run Claude Code here.
       const r = spawnSync(claude.cmd, [...claude.args, ...rest], { stdio: "inherit" });
       process.exit(r.status ?? 0);
@@ -147,7 +147,7 @@ const commands = {
       cwd,
       cmd: claude.cmd,
       args: [...claude.args, ...rest],
-      env: { GLANCECODE_HOOK_PORT: String(cfg.hookPort) },
+      env: { CODEASIDE_HOOK_PORT: String(cfg.hookPort) },
       cols: process.stdout.columns || 120,
       rows: process.stdout.rows || 40,
     });
@@ -320,7 +320,7 @@ const commands = {
       return;
     }
     const code = `${url}#${cfg.token}`;
-    console.log(`Pairing code (paste it on the phone screen of the ${BRAND.displayName} app):\n`);
+    console.log("Pairing code (paste it on the phone screen of the glasses app):\n");
     console.log(`  ${code}\n`);
     try {
       const { createRequire } = await import("node:module");
@@ -529,7 +529,7 @@ function isOurHook(command) {
 
 /** The script path inside one of our hook commands, for the stale check. */
 function hookScriptPath(command) {
-  return /"([^"]*glancecode-hook[^"]*)"/.exec(command)?.[1] || null;
+  return /"([^"]*codeaside-hook[^"]*)"/.exec(command)?.[1] || null;
 }
 
 function staleHookCommands(settings) {

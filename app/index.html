@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>GlanceCode</title>
+    <title>CodeAside</title>
     <style>
       :root { color-scheme: dark; }
       body { margin: 0; background: #151515; color: #e6e6e6; font: 15px/1.45 -apple-system, system-ui, sans-serif; }
@@ -20,11 +20,11 @@
   </head>
   <body>
     <main>
-      <h1>GlanceCode <span id="version" style="font-size:12px;font-weight:400;color:#8a8a8a"></span></h1>
+      <h1>CodeAside <span id="version" style="font-size:12px;font-weight:400;color:#8a8a8a"></span></h1>
       <span id="status">Starting…</span>
       <pre id="mirror"></pre>
       <form id="pair" hidden>
-        <input id="pair-code" placeholder="Pairing code from glancecode pair" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <input id="pair-code" placeholder="Pairing code from codeaside pair" autocomplete="off" autocapitalize="off" spellcheck="false" />
         <button type="submit">Pair</button>
       </form>
       <p class="help">
@@ -32,8 +32,8 @@
         <b>Double-tap</b> goes back. <b>Tap then hold</b> opens the menu: interrupt, switch model, compact.
       </p>
       <p><button id="demo" type="button" hidden>Try the demo</button> <button id="unpair" type="button">Forget this hub</button></p>
-      <p class="help">Works with Claude Code on your own Windows PC through the free glancecode hub for Windows, a fork of GlanceCode by sousy. Not affiliated with or endorsed by Anthropic or Even Realities.
-        <a href="https://github.com/gwro/glancecode-win#readme" style="color:#9ecbff">Setup guide</a> · <a href="https://github.com/gwro/glancecode-win/blob/main/docs/privacy.md" style="color:#9ecbff">Privacy</a></p>
+      <p class="help">CodeAside works with Claude Code on your own PC through the free codeaside hub, which runs on Windows. It is built on GlanceCode by sousy. Not affiliated with or endorsed by Anthropic or Even Realities.
+        <a href="https://github.com/gwro/CodeAside#readme" style="color:#9ecbff">Setup guide</a> · <a href="https://github.com/gwro/CodeAside/blob/main/docs/privacy.md" style="color:#9ecbff">Privacy</a></p>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

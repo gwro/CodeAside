@@ -55,8 +55,8 @@ export function startHost({ pipe = defaultPipe(), log = () => {}, exitWhenIdle =
       });
       const fullEnv = {};
       for (const [k, v] of Object.entries({ ...process.env, ...env })) if (v !== undefined && v !== null && !NESTED_SESSION_MARKERS.test(k)) fullEnv[k] = String(v);
-      fullEnv.GLANCECODE_HOST = pipe;
-      fullEnv.GLANCECODE_PANE = this.id;
+      fullEnv.CODEASIDE_HOST = pipe;
+      fullEnv.CODEASIDE_PANE = this.id;
       this.pty = pty.spawn(cmd, args, { name: "xterm-256color", cols, rows, cwd, env: fullEnv, useConpty: true });
       this.pty.onData((data) => {
         this.term.write(data);
@@ -72,7 +72,7 @@ export function startHost({ pipe = defaultPipe(), log = () => {}, exitWhenIdle =
         }
         for (const s of this.attached) {
           if (s.destroyed) continue;
-          s.write(`\r\n\x1b[0m[glancecode] session ended (exit ${this.exitCode})\r\n`);
+          s.write(`\r\n\x1b[0m[codeaside] session ended (exit ${this.exitCode})\r\n`);
           s.end();
         }
         this.attached.clear();

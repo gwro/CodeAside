@@ -1,13 +1,13 @@
 # Security
 
-GlanceCode lets a paired phone drive Claude Code sessions on your PC, so security
+CodeAside lets a paired phone drive Claude Code sessions on your PC, so security
 issues matter here. Please report them privately.
 
 ## Reporting a vulnerability
 
 Use GitHub's private vulnerability reporting on this repository (Security tab,
 "Report a vulnerability"). Please include steps to reproduce and the version
-(`glancecode version`). This fork is provided as-is, without a promised response
+(`codeaside version`). This fork is provided as-is, without a promised response
 time.
 
 Don't open a public issue for a security problem. A problem that is also in
@@ -19,8 +19,8 @@ too.
 - The hub API listens on 127.0.0.1. Phones reach it through `tailscale serve`,
   which terminates HTTPS on the machine's `*.ts.net` name and forwards to the hub.
 - Every API request needs the pairing token (24 random bytes, compared in constant
-  time). The token is stored in `%APPDATA%\glancecode\config.json`, in your Windows
-  profile, and is never bundled into the glasses app. `glancecode pair` prints it,
+  time). The token is stored in `%APPDATA%\codeaside\config.json`, in your Windows
+  profile, and is never bundled into the glasses app. `codeaside pair` prints it,
   and the QR code from `pair --dev` carries it, so treat both like a password.
 - The Claude Code hook posts to a separate port on 127.0.0.1 that is never served
   over Tailscale.
@@ -36,6 +36,6 @@ too.
 
 - Anyone who already has the pairing token and access to your tailnet. That is
   the trust boundary by design.
-- Claude Code's own permission system, which GlanceCode doesn't change.
+- Claude Code's own permission system, which CodeAside doesn't change.
 - Other programs running as your user account. They can already run Claude Code
   directly.

@@ -5,7 +5,7 @@ import { HostClient, KEYS, attach, resolveClaude, styledScreen } from "../host/c
 
 const WIN = process.platform === "win32";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const pipe = `\\\\.\\pipe\\glancecode-test-${process.pid}-${Date.now()}`;
+const pipe = `\\\\.\\pipe\\codeaside-test-${process.pid}-${Date.now()}`;
 
 /** Poll until the screen contains `text` or time runs out. */
 async function screenHas(c, session, text, ms = 5000) {

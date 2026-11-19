@@ -1,6 +1,6 @@
 # Changelog
 
-GlanceCode for Windows is versioned on its own, starting at 0.1.0. It was forked
+CodeAside is versioned on its own, starting at 0.1.0. It was forked
 from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3.1)
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
@@ -8,7 +8,7 @@ is kept at the end for reference.
 ## Unreleased
 
 The fork's copy of the glasses app gains seven settings in the hub's config. They
-need that copy of the app (`glancecode pair --dev`, or your own build); upstream's
+need that copy of the app (`codeaside pair --dev`, or your own build); upstream's
 build in Even Hub ignores them.
 
 - `replyFromStart`, on by default. A reply that arrives while a session is open,
@@ -45,6 +45,12 @@ build in Even Hub ignores them.
   header counts the lines below the view (`↓13`).
 - `pair --dev` printed a sideload QR code without the token on Windows, because
   the shell cut the address at its `&`. The address is now quoted.
+- The project is named CodeAside throughout, so that it isn't taken for upstream's
+  GlanceCode: the repository ([gwro/CodeAside](https://github.com/gwro/CodeAside)),
+  the glasses app and its package ID, the `codeaside` command, the npm package,
+  the config and data folders, the scheduled task, the host's named pipe and the
+  `CODEASIDE_` environment variables. An install made before the rename has to
+  be removed and set up again; nothing is carried over by itself.
 - The app's built-in demo shows Claude Code sessions only, as the hub runs, and
   one of them has a suggested prompt. The listing's screenshots are retaken from
   it, and there is a cover image.
@@ -69,7 +75,7 @@ Windows 11 with Even's simulator for the glasses app, not yet with G2 glasses.
   launcher so it belongs to no process tree: hub restarts leave sessions running
   and the hub picks them up again, and the host exits by itself when its last
   session ends.
-- `glancecode claude [args]` starts Claude Code in the host and attaches the
+- `codeaside claude [args]` starts Claude Code in the host and attaches the
   console; Ctrl+] or closing the window detaches; `attach` and `ls` work as
   upstream's tmux versions do. The detach chord is recognised in the plain,
   win32-input-mode and kitty keyboard encodings Windows terminals use.
@@ -83,9 +89,9 @@ Windows 11 with Even's simulator for the glasses app, not yet with G2 glasses.
 
 ### Service
 
-- `glancecode service install|uninstall|restart|stop|status`: the hub as a Task
+- `codeaside service install|uninstall|restart|stop|status`: the hub as a Task
   Scheduler task for the signed-in user, started hidden at logon, restarted within
-  a minute if it fails, logging to `%LOCALAPPDATA%\glancecode\logs\hub.log`.
+  a minute if it fails, logging to `%LOCALAPPDATA%\codeaside\logs\hub.log`.
 - The PC is held awake (system, not display) while the hub runs on AC power;
   `preventSleep: false` turns it off.
 - `doctor` reports Node, Claude Code, the hook, the host, the hub, the service,
@@ -94,7 +100,7 @@ Windows 11 with Even's simulator for the glasses app, not yet with G2 glasses.
 
 ### Voice
 
-- `glancecode setup-voice` downloads whisper.cpp's Windows release (pinned build)
+- `codeaside setup-voice` downloads whisper.cpp's Windows release (pinned build)
   and the speech model, resuming interrupted downloads. With an NVIDIA GPU it
   installs the CUDA build, which transcribes a sentence in about 70 ms against
   about real time on the CPU; `--cuda` and `--cpu` choose. The hub warms the
@@ -119,8 +125,8 @@ Windows 11 with Even's simulator for the glasses app, not yet with G2 glasses.
 
 ### Paths
 
-- Configuration in `%APPDATA%\glancecode`; speech model, whisper.cpp, logs and
-  launchers in `%LOCALAPPDATA%\glancecode`.
+- Configuration in `%APPDATA%\codeaside`; speech model, whisper.cpp, logs and
+  launchers in `%LOCALAPPDATA%\codeaside`.
 
 ---
 

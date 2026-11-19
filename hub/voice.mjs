@@ -98,7 +98,7 @@ export async function installWhisper(dir, { cuda = false, onProgress, log = () =
     log(`downloading ${url}`);
     await downloadFile(url, zip, { onProgress });
   }
-  const scratch = mkdtempSync(join(tmpdir(), "glancecode-whisper-"));
+  const scratch = mkdtempSync(join(tmpdir(), "codeaside-whisper-"));
   try {
     const ps = join(process.env.SystemRoot || "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
     const r = spawnSync(ps, ["-NoProfile", "-NonInteractive", "-Command", `Expand-Archive -LiteralPath '${zip.replace(/'/g, "''")}' -DestinationPath '${scratch.replace(/'/g, "''")}' -Force`], { encoding: "utf8", windowsHide: true, timeout: 600_000 });

@@ -1,6 +1,6 @@
 // Build and pack the Even Hub app.
 //
-//   npm run pack                bump the patch version, build, pack ../glancecode.ehpk
+//   npm run pack                bump the patch version, build, pack ../codeaside.ehpk
 //   npm run pack -- minor       bump minor (or major)
 //   npm run pack -- --no-bump   pack the current version
 //   npm run pack -- --store     ignore app.local.json (the build to upload to the store)
@@ -30,7 +30,7 @@ if (bump) {
 }
 
 let packManifest = manifest;
-let out = "../glancecode.ehpk";
+let out = "../codeaside.ehpk";
 if (existsSync("app.local.json") && !args.includes("--store")) {
   const local = JSON.parse(readFileSync("app.local.json", "utf8"));
   const { extraWhitelist = [], output, ...overrides } = local;
@@ -51,7 +51,7 @@ const run = (cmd, cmdArgs) =>
     : execFileSync(cmd, cmdArgs, { stdio: "inherit" });
 run("npx", ["tsc", "--noEmit"]);
 run("npx", ["vite", "build"]);
-const dir = mkdtempSync(join(tmpdir(), "glancecode-pack-"));
+const dir = mkdtempSync(join(tmpdir(), "codeaside-pack-"));
 const manifestPath = join(dir, "app.json");
 writeFileSync(manifestPath, JSON.stringify(packManifest, null, 2) + "\n");
 try {

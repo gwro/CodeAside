@@ -1,18 +1,19 @@
-# GlanceCode for Windows
+# CodeAside
 
 > **Provided as-is.** This port comes with no guarantees or support; use it at
 > your own risk, as the [MIT license](LICENSE) states.
 
-A Windows-native port of [GlanceCode](https://github.com/sousyllc/glancecode):
+CodeAside is a Windows-native port of [GlanceCode](https://github.com/sousyllc/glancecode):
 drive your Claude Code sessions from Even Realities G2 glasses. See the live
 transcript, approve tool calls, answer questions, and hold to talk. Everything runs
 on your own PC and your own Tailscale network.
 
 GlanceCode is an independent project by [sousy](https://github.com/sousyllc). This
-fork adapts its hub and command-line tool to Windows. The GlanceCode app in Even Hub
-is upstream's and pairs with this hub as it would with the original. The fork also
-carries its own copy of the glasses app, which adds a few things for reading on the
+fork adapts its hub and command-line tool to Windows, as `codeaside`, and carries
+its own copy of the glasses app, which adds a few things for reading on the
 glasses; see [The fork's copy of the glasses app](#the-forks-copy-of-the-glasses-app).
+Upstream's GlanceCode app in Even Hub pairs with this hub too, as it would with the
+original.
 Neither project is affiliated with Anthropic, Even Realities or Microsoft.
 
 ## About this fork
@@ -32,7 +33,7 @@ beyond upstream's API is extra fields that upstream's app ignores.
 |---|---|
 | tmux server, `send-keys`, `capture-pane` | A **session host**: a small Node process that runs Claude Code in a Windows pseudo-console (ConPTY), keeps a headless copy of its screen, and serves the hub and the CLI over a user-private named pipe |
 | `glancecode-hook` (bash + curl) | A Node script that Claude Code runs under PowerShell; no Git Bash required |
-| launchd / systemd user service | A Task Scheduler task for the signed-in user, started hidden at logon, restarted on failure, logging to `%LOCALAPPDATA%\glancecode\logs` |
+| launchd / systemd user service | A Task Scheduler task for the signed-in user, started hidden at logon, restarted on failure, logging to `%LOCALAPPDATA%\codeaside\logs` |
 | `caffeinate` | A helper holding the system awake (not the display) while on AC power |
 | `brew install whisper-cpp` | `setup-voice` downloads whisper.cpp's Windows release and the speech model; on a PC with an NVIDIA GPU it installs the CUDA build |
 | Codex and Gemini CLI support | Not included. The fork follows Claude Code only. |
@@ -63,7 +64,7 @@ your sessions through Claude Code hooks and their transcript files. The glasses 
 talks only to the hub, over your private Tailscale network.
 
 ```
-claude.exe (in ConPTY) ◀── keys ─── session host ◀── named pipe ──┬── glancecode claude / attach (your terminal)
+claude.exe (in ConPTY) ◀── keys ─── session host ◀── named pipe ──┬── codeaside claude / attach (your terminal)
         │ screen ──────────────────▶ (headless terminal)            └── hub (127.0.0.1)
         └── hooks ──────────────────────────────────────────────────────▶ hub ◀── tailscale serve (HTTPS) ◀── Even app ◀── G2
             transcript ─────────────────────────────────────────────────▶ hub
@@ -107,9 +108,9 @@ On your PC (Windows 10 version 1809 or newer; Windows 11 recommended):
 - [Tailscale](https://tailscale.com/download/windows), signed in, with HTTPS
   certificates enabled for your tailnet at
   [login.tailscale.com/admin/dns](https://login.tailscale.com/admin/dns)
-- Optional, for voice: nothing to install by hand. `glancecode setup-voice`
+- Optional, for voice: nothing to install by hand. `codeaside setup-voice`
   downloads whisper.cpp and the speech model (about 550 MB) into
-  `%LOCALAPPDATA%\glancecode`. With an NVIDIA GPU it takes the CUDA build (about
+  `%LOCALAPPDATA%\codeaside`. With an NVIDIA GPU it takes the CUDA build (about
   685 MB, runtime included; only the normal driver is needed), which transcribes a
   sentence in under a tenth of a second. The CPU build (`--cpu`) takes about as
   long as the speech itself. Transcription is local and offline; there is no API
@@ -125,11 +126,11 @@ On your phone:
 From a checkout of this repository, in PowerShell:
 
 ```powershell
-git clone https://github.com/gwro/glancecode-win.git
-cd glancecode-win
+git clone https://github.com/gwro/CodeAside.git
+cd CodeAside
 npm install
 npm run build:app
-node bin\glancecode setup
+node bin\codeaside setup
 ```
 
 `setup` checks the requirements, adds the hook to `%USERPROFILE%\.claude\settings.json`,
@@ -138,29 +139,32 @@ HTTPS on your `*.ts.net` name, downloads the speech model, and prints a pairing
 code. Each step is also its own command (`install`, `service install`, `serve`,
 `setup-voice`, `pair`), and `doctor` reports which pieces are missing.
 
-Then install **GlanceCode** from Even Hub in the Even Realities app, open it, and
-paste the pairing code on the phone screen, or scan the QR code that `pair` prints.
-That is upstream's app. To use the fork's own copy, see
-[The fork's copy of the glasses app](#the-forks-copy-of-the-glasses-app).
+Then open the glasses app and paste the pairing code on the phone screen, or scan
+the QR code that `pair` prints. The fork's own app is CodeAside; see
+[The fork's copy of the glasses app](#the-forks-copy-of-the-glasses-app) for how to
+get it. Upstream's GlanceCode app from Even Hub pairs the same way, without the
+fork's additions.
 
 To let the glasses drive a session you start at your desk, start it through the
 host:
 
 ```powershell
-node bin\glancecode claude       # takes the same arguments as claude
+node bin\codeaside claude       # takes the same arguments as claude
 ```
 
 Sessions started any other way still appear on the glasses, marked view only.
 Closing the terminal window only detaches; the session keeps running and
-`glancecode attach` opens it again. Ctrl+] detaches deliberately.
+`codeaside attach` opens it again. Ctrl+] detaches deliberately.
 
-To have `glancecode` on your PATH instead of `node bin\glancecode`, run
+To have `codeaside` on your PATH instead of `node bin\codeaside`, run
 `npm install -g .` from the checkout. The installed service keeps working, since it
 refers to the checkout by absolute path.
 
 ## The fork's copy of the glasses app
 
 The app in `app/` started as upstream's 0.3.1 and is now versioned with the fork.
+It has a name of its own, **CodeAside**, so that it isn't taken for upstream's app
+or an edition of it. The hub and its command are `codeaside` as well.
 It reads seven display settings from the hub, all described under
 [Configuration](#configuration):
 
@@ -187,7 +191,7 @@ your checkout:
 
 ```powershell
 npm run build:app
-node bin\glancecode pair --dev
+node bin\codeaside pair --dev
 ```
 
 In the Even Realities app, open the Even Hub tab, then the developer section in
@@ -202,10 +206,10 @@ being published:
 1. Give it an identity of your own in `app\app.local.json`, which git ignores. The
    package ID has to be one nobody else has claimed:
    ```json
-   { "package_id": "com.example.glancecode", "name": "GlanceCode Win" }
+   { "package_id": "com.example.codeaside", "name": "My CodeAside" }
    ```
 2. Run `npm run pack:personal`. It raises the app's version, builds it and writes
-   `glancecode.ehpk` in the checkout. Even's portal only offers phones an update
+   `codeaside.ehpk` in the checkout. Even's portal only offers phones an update
    when the version is new, which is why every pack raises it; add `-- --no-bump`
    to pack the current version again.
 3. At hub.evenrealities.com, create an app for it and upload the file under
@@ -215,7 +219,7 @@ being published:
    under Testing group, accept the invitation email, and promote the build to
    Beta. Then install it in the Even Realities app under Me > Beta tester. A build
    left private installs from Me > Apps > Private builds, with those two limits.
-5. Open it and pair with the code from `glancecode pair`.
+5. Open it and pair with the code from `codeaside pair`.
 
 ## Using it
 
@@ -241,21 +245,21 @@ At your desk:
 
 | Command | What it does |
 |---|---|
-| `glancecode claude [args]` | start Claude Code in the host and attach this console |
-| `glancecode attach [name]` | open a running session in this terminal |
-| `glancecode ls` | list sessions |
-| `glancecode feed` | a readable live feed of every session |
-| `glancecode status` | hub and sessions |
-| `glancecode doctor` | check every piece and say what to fix |
-| `glancecode pair [--dev]` | print the pairing code and its QR code; `--dev` adds the QR code that sideloads the fork's copy of the app |
-| `glancecode service restart` | restart the hub; running sessions are untouched |
-| `glancecode setup-voice [--cuda\|--cpu]` | install or switch the whisper.cpp build |
+| `codeaside claude [args]` | start Claude Code in the host and attach this console |
+| `codeaside attach [name]` | open a running session in this terminal |
+| `codeaside ls` | list sessions |
+| `codeaside feed` | a readable live feed of every session |
+| `codeaside status` | hub and sessions |
+| `codeaside doctor` | check every piece and say what to fix |
+| `codeaside pair [--dev]` | print the pairing code and its QR code; `--dev` adds the QR code that sideloads the fork's copy of the app |
+| `codeaside service restart` | restart the hub; running sessions are untouched |
+| `codeaside setup-voice [--cuda\|--cpu]` | install or switch the whisper.cpp build |
 
-Logs are in `%LOCALAPPDATA%\glancecode\logs`: `hub.log` for the hub and `host.log`
+Logs are in `%LOCALAPPDATA%\codeaside\logs`: `hub.log` for the hub and `host.log`
 for the session host.
 
 The examples use PowerShell. In Git Bash, write the path with forward slashes
-(`node bin/glancecode status`): Bash reads a backslash as an escape.
+(`node bin/codeaside status`): Bash reads a backslash as an escape.
 
 ### If the glasses can't reach the hub
 
@@ -263,7 +267,7 @@ The app says so, with the address it tried and the reason in brackets.
 
 - `(bad token)`: the phone reached the hub with an old token. Pair again.
 - Anything else, such as `(Failed to fetch)`: the request never arrived. Run
-  `glancecode doctor` on the PC, then open the hub's address
+  `codeaside doctor` on the PC, then open the hub's address
   (`https://<your-pc>.<tailnet>.ts.net:7443`) in the phone's browser.
   - If the page loads there, the phone reaches the PC and something on the phone
     is keeping the Even Realities app off Tailscale, for example app-based split
@@ -278,7 +282,7 @@ The app says so, with the address it tried and the reason in brackets.
   `tailscale serve`, so traffic stays inside your tailnet and is encrypted.
 - Every request needs the pairing token. Anyone with that token and access to your
   tailnet can type into your sessions, so keep it private. To replace it, delete
-  the `token` line in `%APPDATA%\glancecode\config.json` and restart the hub.
+  the `token` line in `%APPDATA%\codeaside\config.json` and restart the hub.
 - The hook port accepts connections from 127.0.0.1 only.
 - The session host listens on a named pipe that only your Windows user can open.
   It never listens on the network.
@@ -288,16 +292,16 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 
 ## Configuration
 
-`%APPDATA%\glancecode\config.json` is created on first run.
+`%APPDATA%\codeaside\config.json` is created on first run.
 
 | Key | Default | Purpose |
 |---|---|---|
 | `port` | 7717 | hub API on 127.0.0.1 |
 | `httpsPort` | 7443 | HTTPS port on your `*.ts.net` name |
 | `hookPort` | 7718 | hook intake on 127.0.0.1 |
-| `hostPipe` | `\\.\pipe\glancecode-host-<user>` | the session host's named pipe |
+| `hostPipe` | `\\.\pipe\codeaside-host-<user>` | the session host's named pipe |
 | `claudeArgs` | `[]` | extra arguments for sessions started from the glasses |
-| `whisperBin` | `%LOCALAPPDATA%\glancecode\whisper\whisper-server.exe` | whisper.cpp server, as installed by `setup-voice`; point it at your own build to use that instead |
+| `whisperBin` | `%LOCALAPPDATA%\codeaside\whisper\whisper-server.exe` | whisper.cpp server, as installed by `setup-voice`; point it at your own build to use that instead |
 | `whisperThreads` | half the logical CPUs, 2 to 8 | CPU threads for transcription (CPU build) |
 | `sttVocabulary` | | words the speech model should expect |
 | `ntfyTopic` | empty | optional phone push through ntfy when a session finishes or needs you |
@@ -308,14 +312,14 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `latestOnTalk` | true | on the glasses, when you hold to talk in a session that is scrolled up or held at the start of a reply, jump to its latest lines before listening. With `false`, the view stays where it was, as in upstream's app |
 | `toolLines` | 2 | on the glasses, the lines a tool call's description may take, 1 to 6. A longer description is cut where the display runs out, measured in pixels, and ends in "…" |
 | `latestOnPrompt` | true | on the glasses, jump to a session's latest lines when a prompt is sent to it or a dialog in it is answered, at the desk as well as from the glasses. With `false`, a view you have scrolled stays where it is |
-| `showSuggestions` | true | on the glasses, show the next prompt Claude Code suggests, when it suggests one, under an idle session's latest lines, marked `→`. Claude Code only draws it in its input box, so the hub reads it off the screen of sessions started with `glancecode claude`; view-only sessions show none. With `false`, the hub doesn't look |
+| `showSuggestions` | true | on the glasses, show the next prompt Claude Code suggests, when it suggests one, under an idle session's latest lines, marked `→`. Claude Code only draws it in its input box, so the hub reads it off the screen of sessions started with `codeaside claude`; view-only sessions show none. With `false`, the hub doesn't look |
 | `sendSuggestionOnTap` | true | on the glasses, let a tap on a shown suggestion send it as your next prompt once a second tap confirms it. After the first tap the glasses ask for the second for eight seconds; a double-tap or a swipe calls it off. With `false`, a suggestion is only shown |
 
 The last seven are for [the fork's copy of the glasses app](#the-forks-copy-of-the-glasses-app).
 Upstream's build in Even Hub ignores them and behaves as it always has. A setting
 left out of the file has its default, so the file only needs the ones you change.
 
-Restart the hub after changing the file: `glancecode service restart`. Sessions
+Restart the hub after changing the file: `codeaside service restart`. Sessions
 keep running through a restart; a message being dictated at that moment is lost.
 
 ## Limitations
@@ -323,7 +327,7 @@ keep running through a restart; a message being dictated at that moment is lost.
 - Even Hub apps only run while they are open on the glasses. To hear about a
   session while another app is open, set `ntfyTopic`.
 - The G2 display has one font weight, so markdown is shown as plain text.
-- Sessions must be started with `glancecode claude` for the glasses to type into
+- Sessions must be started with `codeaside claude` for the glasses to type into
   them. Others are view only, and show no suggested prompts, since the hub can't
   read their screen.
 - A suggested prompt appears a few seconds after Claude Code draws it, and only
@@ -345,8 +349,8 @@ keep running through a restart; a message being dictated at that moment is lost.
 npm install
 npm run build:app          # build the glasses app
 npm test                   # hub, host and app tests
-node bin\glancecode hub    # run the hub in the foreground
-npm run pack:personal      # pack the glasses app as glancecode.ehpk
+node bin\codeaside hub    # run the hub in the foreground
+npm run pack:personal      # pack the glasses app as codeaside.ehpk
 ```
 
 The hub itself has no runtime dependencies, as upstream's doesn't. The session host

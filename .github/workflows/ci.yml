@@ -29,9 +29,9 @@ jobs:
         run: npm test --prefix app
       - name: CLI smoke test
         env:
-          GLANCECODE_CONFIG_DIR: ${{ runner.temp }}/glancecode-config
-          GLANCECODE_DATA_DIR: ${{ runner.temp }}/glancecode-data
+          CODEASIDE_CONFIG_DIR: ${{ runner.temp }}/codeaside-config
+          CODEASIDE_DATA_DIR: ${{ runner.temp }}/codeaside-data
         run: |
-          node bin/glancecode help
-          node bin/glancecode version
-          node bin/glancecode ls
+          node bin/codeaside help
+          node bin/codeaside version
+          node bin/codeaside ls

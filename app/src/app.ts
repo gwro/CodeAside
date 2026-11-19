@@ -151,7 +151,7 @@ export class App {
     if (!this.hub.connected && this.hub.sessions.size === 0) {
       frame = {
         header: spread("Sessions", "offline", HEADER_INNER_W),
-        body: wrap(`Can't reach the hub at ${this.hub.cfg.url}. Retrying.\n\nOn your computer run: glancecode doctor\n${this.hub.lastError ? `(${this.hub.lastError})` : ""}`, BODY_INNER_W),
+        body: wrap(`Can't reach the hub at ${this.hub.cfg.url}. Retrying.\n\nOn your computer run: codeaside doctor\n${this.hub.lastError ? `(${this.hub.lastError})` : ""}`, BODY_INNER_W),
       };
     } else if (this.voice.phase !== "idle" && this.frozenFrame) {
       frame = this.frozenFrame;
@@ -537,7 +537,7 @@ class SessionScreen implements Screen {
 
   private viewOnlyHint() {
     const agent = agentOf(this.session);
-    return agent === "codex" ? "View only: Codex isn't connected to the hub right now" : `View only: started outside glancecode. Start it with glancecode ${agent}`;
+    return agent === "codex" ? "View only: Codex isn't connected to the hub right now" : `View only: started outside codeaside. Start it with codeaside ${agent}`;
   }
 
   /** Show the latest lines, leaving wherever the view was scrolled or held. */

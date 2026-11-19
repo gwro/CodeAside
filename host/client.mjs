@@ -13,7 +13,7 @@ export const HOST_SCRIPT = join(HERE, "host.mjs");
 /** The one host per Windows user listens here. */
 export function defaultPipe() {
   const user = (userInfo().username || "user").replace(/[^A-Za-z0-9_-]/g, "_");
-  return `\\\\.\\pipe\\glancecode-host-${user}`;
+  return `\\\\.\\pipe\\codeaside-host-${user}`;
 }
 
 /** Keys the hub may press, and the bytes a terminal would send for them. */
@@ -287,7 +287,7 @@ export function attach({ pipe = defaultPipe(), id, stdin = process.stdin, stdout
     };
     const onResize = () => send({ op: "resize", cols: stdout.columns || 80, rows: stdout.rows || 24 });
     const onInput = (chunk) => {
-      if (process.env.GLANCECODE_ATTACH_DEBUG) appendFileSync(process.env.GLANCECODE_ATTACH_DEBUG, `${Date.now()} in ${JSON.stringify(chunk.toString("latin1"))}\n`);
+      if (process.env.CODEASIDE_ATTACH_DEBUG) appendFileSync(process.env.CODEASIDE_ATTACH_DEBUG, `${Date.now()} in ${JSON.stringify(chunk.toString("latin1"))}\n`);
       if (isDetachChord(chunk)) {
         // Ctrl+]: detach, leaving the session running.
         send({ op: "detach" });

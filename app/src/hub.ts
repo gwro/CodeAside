@@ -1,4 +1,4 @@
-// Client for the glancecode hub: REST calls plus a replaying event stream.
+// Client for the codeaside hub: REST calls plus a replaying event stream.
 import type { Agent, HubEvent, Item, ModelChoice, RecentProject, RecentSession, SessionSummary } from "./types.ts";
 import { every } from "./timers.ts";
 import { TOOL_LINES } from "./format.ts";

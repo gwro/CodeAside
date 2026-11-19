@@ -1,22 +1,22 @@
 # Contributing
 
 This is the Windows-native fork of [GlanceCode](https://github.com/sousyllc/glancecode),
-published at [gwro/glancecode-win](https://github.com/gwro/glancecode-win).
+published at [gwro/CodeAside](https://github.com/gwro/CodeAside).
 See `docs/windows-design.md` for what changed and why.
 
 ## Setup
 
 ```powershell
-git clone https://github.com/gwro/glancecode-win.git
-cd glancecode-win
+git clone https://github.com/gwro/CodeAside.git
+cd CodeAside
 npm install
 npm run build:app
 npm test
 ```
 
-Run the hub from the checkout with `node bin/glancecode hub`. To keep a development
-hub apart from an installed one, set `GLANCECODE_CONFIG_DIR`, `GLANCECODE_DATA_DIR` and
-`GLANCECODE_HOST_PIPE` to scratch values and use different ports in that config.
+Run the hub from the checkout with `node bin/codeaside hub`. To keep a development
+hub apart from an installed one, set `CODEASIDE_CONFIG_DIR`, `CODEASIDE_DATA_DIR` and
+`CODEASIDE_HOST_PIPE` to scratch values and use different ports in that config.
 
 Claude Code also reads hooks from a project's own `.claude/settings.json`, so a
 scratch project folder with the hook in it lets you test the hub without touching
@@ -30,7 +30,7 @@ sessions, so the whole stack short of the hardware can be tested:
 
 ```powershell
 npm run build:app
-$cfg = Get-Content "$env:APPDATA\glancecode\config.json" | ConvertFrom-Json
+$cfg = Get-Content "$env:APPDATA\codeaside\config.json" | ConvertFrom-Json
 npx @evenrealities/evenhub-simulator --automation-port 9898 "http://127.0.0.1:7717/?hub=http%3A%2F%2F127.0.0.1%3A7717&token=$($cfg.token)"
 ```
 
@@ -60,8 +60,8 @@ until it has seen the first one released.
 To try a hub change without restarting your installed hub, run a second one from
 the checkout on other ports, as under Setup. It has no sessions of its own, since
 your hooks report to the installed hub. To give it some, copy entries from
-`%APPDATA%\glancecode\sessions.json` into the scratch config folder's
-`sessions.json`; with `GLANCECODE_HOST_PIPE` left unset it reads those sessions'
+`%APPDATA%\codeaside\sessions.json` into the scratch config folder's
+`sessions.json`; with `CODEASIDE_HOST_PIPE` left unset it reads those sessions'
 screens from your real host, and can type into them, so only look.
 
 ## The glasses app
@@ -78,7 +78,7 @@ A display setting takes four steps:
 3. The same default in `Hub.prefs` (`app/src/hub.ts`), for a hub that sends none.
 4. A row in the README's Configuration table and a line in the changelog.
 
-`node bin\glancecode pair --dev` sideloads the app from the hub, and
+`node bin\codeaside pair --dev` sideloads the app from the hub, and
 `npm run pack:personal` packs it for upload; the README has both in full.
 
 ## Guidelines

@@ -66,7 +66,7 @@ export class Transcriber {
 
   async ensure() {
     if (this.ready) return this.ready;
-    if (!this.available) throw new Error(`speech model or whisper-server not found (${this.model}, ${this.bin}); run: glancecode setup-voice`);
+    if (!this.available) throw new Error(`speech model or whisper-server not found (${this.model}, ${this.bin}); run: codeaside setup-voice`);
     this.ready = (async () => {
       if (await this.ping()) return; // already running (for example, a previous hub)
       this.proc = spawn(this.bin, ["-m", this.model, "--host", "127.0.0.1", "--port", String(this.port), "-l", "en", "-nt", "-t", String(this.threads)], {

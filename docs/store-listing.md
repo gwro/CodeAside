@@ -8,7 +8,11 @@ for its app and its macOS and Linux hub, is in
 The package ID and name come from `app\app.local.json`; see "The fork's copy of the
 glasses app" in the [README](../README.md).
 
-**Name** (20 characters max): GlanceCode Win
+**Name** (20 characters max): CodeAside
+
+The app has a name of its own, without a platform in it, so that it isn't taken
+for upstream's GlanceCode or an edition of it, and still fits if the hub later
+runs on more than Windows. The hub and its command have the same name, `codeaside`.
 
 **Tagline** (50 characters max):
 Claude Code on your G2: watch, approve, talk back.
@@ -18,8 +22,8 @@ Your Claude Code sessions on your glasses. Watch progress, approve, and talk bac
 
 **Description:**
 
-GlanceCode Win shows the Claude Code sessions running on your Windows PC and lets
-you work with them from your G2, without taking the session over.
+CodeAside shows the Claude Code sessions running on your PC and lets you work with
+them from your G2, without taking the session over.
 
 - See every session and whether it's working, idle or waiting for you.
 - Read the live transcript: replies, progress and tool calls. A long reply starts
@@ -34,20 +38,20 @@ you work with them from your G2, without taking the session over.
 - Keep working in the same session from your glasses and your PC at the same time.
   Nothing is copied or split, so you can switch whenever you like.
 
-GlanceCode Win needs the free glancecode hub for Windows running on your PC, and
-Tailscale on the PC and the phone. Setup is a checkout and one command; the steps
-are at https://github.com/gwro/glancecode-win. Everything stays on your own PC and
-network, and voice is transcribed locally.
+CodeAside needs the free codeaside hub running on your PC, which is for Windows
+today, and Tailscale on the PC and the phone. Setup is a checkout and one command;
+the steps are at https://github.com/gwro/CodeAside. Everything stays on your
+own PC and network, and voice is transcribed locally.
 
 Not paired yet? Tap on the glasses to try a demo with sample sessions.
 
-GlanceCode Win is a Windows fork of GlanceCode by sousy. Both are independent
+CodeAside is built on GlanceCode by sousy, as a fork of it. Both are independent
 projects and aren't affiliated with Anthropic, Even Realities or Microsoft.
 
 Visit the project at:
-- GitHub: https://github.com/gwro/glancecode-win
+- GitHub: https://github.com/gwro/CodeAside
 - Upstream: https://github.com/sousyllc/glancecode
-- Privacy: https://github.com/gwro/glancecode-win/blob/main/docs/privacy.md
+- Privacy: https://github.com/gwro/CodeAside/blob/main/docs/privacy.md
 
 **Permissions:**
 - Glasses microphone: hold to talk. Audio goes only to the hub on your PC.
@@ -96,6 +100,6 @@ magick -size 576x288 xc:"#00FF00" mask.png -alpha off \
 The mask carries the text, dilated and brightened a little so the thin strokes stay
 readable against a light background, and the color is the display's green.
 
-**Privacy policy URL:** https://github.com/gwro/glancecode-win/blob/main/docs/privacy.md
+**Privacy policy URL:** https://github.com/gwro/CodeAside/blob/main/docs/privacy.md
 
 **Icon:** draw in the portal's 24×24 editor. Keep it to 2×2 pixel blocks.

@@ -1,4 +1,4 @@
-# GlanceCode for Windows: design
+# CodeAside: design of the Windows port
 
 This fork makes GlanceCode run natively on Windows: no WSL, no tmux, no Git Bash
 needed at runtime. The glasses app is untouched. The first version follows Claude
@@ -39,10 +39,10 @@ a no-op, and nothing assumes `/` as the path separator.
 ## Architecture
 
 ```
-claude.exe (in ConPTY) ◀── keys ─── session host ◀── named pipe ──┬── glancecode claude / attach (your terminal)
+claude.exe (in ConPTY) ◀── keys ─── session host ◀── named pipe ──┬── codeaside claude / attach (your terminal)
         │ screen bytes ─────────────▶ (headless xterm buffer)       └── hub (127.0.0.1:7717)
         │                                                               ▲        ▲
-        └── hooks ── powershell ── node glancecode-hook.mjs ── POST 127.0.0.1:7718  │
+        └── hooks ── powershell ── node codeaside-hook.mjs ── POST 127.0.0.1:7718  │
             transcript %USERPROFILE%\.claude\projects\<dir>\<id>.jsonl ── hub tails ┘
                                                                                  │
    whisper-server.exe (127.0.0.1:7719) ◀── hub ◀── tailscale serve (HTTPS) ◀── Even app ◀── G2
@@ -56,7 +56,7 @@ Three processes on the computer, all running as the signed-in user:
 - **hub**: unchanged in role. Registry, transcript tailing, API, hook intake,
   voice, notifications. Talks to the host over the pipe the way it talked to tmux
   through `execFile("tmux", ...)`.
-- **CLI** (`glancecode`): setup, doctor, service, serve, pair, and the terminal
+- **CLI** (`codeaside`): setup, doctor, service, serve, pair, and the terminal
   client that attaches to a host session.
 
 ## The session host
@@ -82,15 +82,15 @@ Options considered:
    Needs the window focused and visible, breaks when you alt-tab. No.
 
 Option 1, with the host as a separate process (like the tmux server) rather than
-inside the hub, so that `glancecode service restart` or an upgrade leaves sessions
-running, and `glancecode claude` works even when the hub is down.
+inside the hub, so that `codeaside service restart` or an upgrade leaves sessions
+running, and `codeaside claude` works even when the hub is down.
 
 ### Process model
 
 - Binary: `node host/host.mjs`, started detached and windowless by whoever needs
-  it first (the CLI for `glancecode claude`, the hub for a launch from the
+  it first (the CLI for `codeaside claude`, the hub for a launch from the
   glasses). One per user, guarded by the named pipe: if the pipe answers, join it.
-- Listens on `\\.\pipe\glancecode-host-<username>`. Named pipes are local only,
+- Listens on `\\.\pipe\codeaside-host-<username>`. Named pipes are local only,
   and the default ACL limits them to the same user, which matches tmux's socket
   permissions.
 - Each session: a ConPTY from `@lydell/node-pty` running Claude Code, a headless
@@ -119,7 +119,7 @@ raw connection for an attach stream.
 
 Session identity for the hub: the pipe name plus the host's session id, standing
 in for tmux's socket path plus pane id (`paneKey` in `hub/tmux.mjs`). The host
-sets `GLANCECODE_HOST=<pipe name>` and `GLANCECODE_PANE=<id>` in the ConPTY's
+sets `CODEASIDE_HOST=<pipe name>` and `CODEASIDE_PANE=<id>` in the ConPTY's
 environment so the hook can report which session it belongs to, the way `$TMUX`
 and `$TMUX_PANE` do upstream. Claude Code's hooks inherit the parent environment
 (documented), so these reach the hook.
@@ -144,12 +144,12 @@ installs the same binary and exposes it through a `claude.cmd` shim). The host
 resolves the command with `where.exe`, prefers a `.exe`, and runs a `.cmd` through
 `cmd.exe /d /c` so ConPTY gets a real executable. There is no login-shell wrapper:
 a process started from a logon task or the hub already has the user's registry
-environment, which is where PATH lives on Windows. `GLANCECODE_HOOK_PORT` is
+environment, which is where PATH lives on Windows. `CODEASIDE_HOOK_PORT` is
 passed as upstream does.
 
 ### The attach client
 
-`glancecode claude [args]` and `glancecode attach [name]` run a thin client in the
+`codeaside claude [args]` and `codeaside attach [name]` run a thin client in the
 current console: stdin in raw mode → pipe → ConPTY; ConPTY output → stdout; window
 resize → `resize`. Closing the window drops the pipe and only detaches. A detach
 key (Ctrl+]) is offered too. On attach the client receives the serialized screen
@@ -172,11 +172,11 @@ Design:
 
 - The hook entry is written with `"shell": "powershell"` so it behaves the same
   with or without Git Bash, and the command is
-  `& "<node.exe>" "<...>\bin\glancecode-hook.mjs"`, both paths absolute and taken
+  `& "<node.exe>" "<...>\bin\codeaside-hook.mjs"`, both paths absolute and taken
   from `process.execPath` and the package location at install time. `async: true`
   as upstream, and a short `timeout`.
-- `glancecode-hook.mjs` reads stdin, posts it to `http://127.0.0.1:7718/hook`
-  with headers `X-Host` and `X-Pane` (from `GLANCECODE_HOST`/`GLANCECODE_PANE`) and
+- `codeaside-hook.mjs` reads stdin, posts it to `http://127.0.0.1:7718/hook`
+  with headers `X-Host` and `X-Pane` (from `CODEASIDE_HOST`/`CODEASIDE_PANE`) and
   `X-Shell-Pid` (PowerShell's `$PID`, passed as an argument), swallows every
   error, and exits 0. Node starts in about 50 ms; PowerShell adds a few hundred.
   Both are hidden by `async`.
@@ -203,39 +203,39 @@ Same commands, same output. Differences:
 
 | Command | Windows behaviour |
 |---|---|
-| `glancecode claude [args]` | starts the host if needed, creates a session, attaches. Inside a host session (`GLANCECODE_PANE` set) it just runs Claude Code, like upstream inside tmux. |
-| `glancecode attach [name]`, `ls` | ask the host instead of `tmux list-sessions` |
-| `glancecode service install\|uninstall\|restart\|status` | Task Scheduler, see below |
-| `glancecode serve on\|off\|status` | `tailscale.exe serve --bg --https=7443 http://127.0.0.1:7717`, found on PATH or at `C:\Program Files\Tailscale\tailscale.exe` |
-| `glancecode setup-voice` | downloads `whisper-bin-x64.zip` (or the arm64 build) from whisper.cpp's release and the model with Node's `fetch`, not `curl` |
-| `glancecode doctor` | checks Node ≥ 20, Claude Code on PATH, Tailscale running with HTTPS certs, the host pipe, the hub, the hook in `settings.json`, the speech model and `whisper-server.exe` |
-| `glancecode pair` | unchanged; the code is printed, and a QR is drawn in the terminal only if a pure-JS encoder is bundled later (`qrencode` isn't common on Windows) |
+| `codeaside claude [args]` | starts the host if needed, creates a session, attaches. Inside a host session (`CODEASIDE_PANE` set) it just runs Claude Code, like upstream inside tmux. |
+| `codeaside attach [name]`, `ls` | ask the host instead of `tmux list-sessions` |
+| `codeaside service install\|uninstall\|restart\|status` | Task Scheduler, see below |
+| `codeaside serve on\|off\|status` | `tailscale.exe serve --bg --https=7443 http://127.0.0.1:7717`, found on PATH or at `C:\Program Files\Tailscale\tailscale.exe` |
+| `codeaside setup-voice` | downloads `whisper-bin-x64.zip` (or the arm64 build) from whisper.cpp's release and the model with Node's `fetch`, not `curl` |
+| `codeaside doctor` | checks Node ≥ 20, Claude Code on PATH, Tailscale running with HTTPS certs, the host pipe, the hub, the hook in `settings.json`, the speech model and `whisper-server.exe` |
+| `codeaside pair` | unchanged; the code is printed, and a QR is drawn in the terminal only if a pure-JS encoder is bundled later (`qrencode` isn't common on Windows) |
 
 `commandExists` uses `where.exe`; `findRealClaude` filters this package's own npm
 shim out of the `where.exe claude` results the same way upstream filters itself
-out of `which -a claude`. The `bin/glancecode` entry gets a `.cmd` shim from npm
-automatically, so `glancecode` works from PowerShell and cmd.
+out of `which -a claude`. The `bin/codeaside` entry gets a `.cmd` shim from npm
+automatically, so `codeaside` works from PowerShell and cmd.
 
 ## Background service: Task Scheduler
 
-`glancecode service install` writes a task XML and registers it with
+`codeaside service install` writes a task XML and registers it with
 `schtasks /Create /XML`, because the XML form is the only one that can ask for
 restart on failure:
 
 - Trigger: at logon of the current user. Principal: the current user, least
   privilege, "run only when user is logged on", so the hub shares the desktop
   session with your terminals and no password is stored.
-- Action: `wscript.exe "%LOCALAPPDATA%\glancecode\hub-launcher.vbs"`, a three-line
-  script that starts `node.exe <glancecode> hub` hidden. A console program started
+- Action: `wscript.exe "%LOCALAPPDATA%\codeaside\hub-launcher.vbs"`, a three-line
+  script that starts `node.exe <codeaside> hub` hidden. A console program started
   directly by a logon task gets a visible console window; this is the standard
   way around it.
 - Settings: `RestartOnFailure` every minute, unlimited; `ExecutionTimeLimit` off;
   `MultipleInstancesPolicy` IgnoreNew; allowed on battery.
-- Logs: the hub writes its own log to `%LOCALAPPDATA%\glancecode\logs\hub.log`,
+- Logs: the hub writes its own log to `%LOCALAPPDATA%\codeaside\logs\hub.log`,
   rotated at 5 MB, since there is no `StandardOutPath`.
 
 `service install` also runs the task once so the hub is up immediately. `status`
-reads `schtasks /Query /TN GlanceCode /V /FO LIST`. The hub keeps sessions across
+reads `schtasks /Query /TN "CodeAside Hub" /V /FO LIST`. The hub keeps sessions across
 its own restarts by asking the host for its session list at startup and matching
 ids against `sessions.json`, so a hub restart never shows an empty glasses list.
 
@@ -250,7 +250,7 @@ tailnet, `tailscale serve` proxying `https://<pc>.<tailnet>.ts.net:7443` to
 `http://127.0.0.1:7717`. A port proxy needs no elevation on Windows (only file
 serving does). `tailscale status --json` and `tailscale serve status --json` have
 the same shape as on macOS, so `tailscaleStatus()` and `serveActive()` in
-`bin/glancecode` port as they are.
+`bin/codeaside` port as they are.
 
 The hub still binds 127.0.0.1 only. Loopback listeners don't trigger Windows
 Firewall prompts.
@@ -262,8 +262,8 @@ whisper.cpp publishes Windows binaries on its build-tagged releases (for example
 and the zip contains `whisper-server.exe`, the same HTTP server upstream talks
 to. The version-tagged releases (`v1.9.x`) carry no binaries, so the code pins a
 build tag. `setup-voice` downloads the zip for the machine's architecture into
-`%LOCALAPPDATA%\glancecode\whisper\` and the `ggml-large-v3-turbo-q5_0.bin` model
-into `%LOCALAPPDATA%\glancecode\models\`, both with resumable `fetch` to a `.part`
+`%LOCALAPPDATA%\codeaside\whisper\` and the `ggml-large-v3-turbo-q5_0.bin` model
+into `%LOCALAPPDATA%\codeaside\models\`, both with resumable `fetch` to a `.part`
 file, and unzips with PowerShell's `Expand-Archive` (no dependency). `hub/stt.mjs`
 only changes the binary path (configurable as `whisperBin`) and spawns it with
 `windowsHide: true`.
@@ -272,11 +272,11 @@ only changes the binary path (configurable as `whisperBin`) and spawns it with
 
 | Upstream | Windows |
 |---|---|
-| `~/.config/glancecode/` (config.json, sessions.json, tmux.conf) | `%APPDATA%\glancecode\` (config.json, sessions.json) |
-| `~/.local/share/glancecode/models/` | `%LOCALAPPDATA%\glancecode\models\`, plus `whisper\` and `logs\` |
+| `~/.config/glancecode/` (config.json, sessions.json, tmux.conf) | `%APPDATA%\codeaside\` (config.json, sessions.json) |
+| `~/.local/share/glancecode/models/` | `%LOCALAPPDATA%\codeaside\models\`, plus `whisper\` and `logs\` |
 | `~/.claude/settings.json`, `~/.claude/projects/` | `%USERPROFILE%\.claude\settings.json`, `%USERPROFILE%\.claude\projects\`. Same layout. The project folder is the cwd with every non-alphanumeric character replaced by `-` (documented), so `D:\Repos\foo` is `D--Repos-foo`; `cwd` inside entries keeps backslashes. `CLAUDE_CONFIG_DIR` is honoured when set. |
 | `chmod 600 config.json` | skipped; the profile folders are already user-only |
-| `GLANCECODE_CONFIG_DIR`, `GLANCECODE_DATA_DIR` | same overrides, used by tests and CI |
+| `CODEASIDE_CONFIG_DIR`, `CODEASIDE_DATA_DIR` | same overrides, used by tests and CI |
 
 Config keys dropped: `tmuxSocket`, `codex*`, `gemini*`, `defaultAgent`. Added:
 `whisperBin`, `hostPipe` (default derived from the username). Everything else
@@ -298,11 +298,11 @@ The fork keeps upstream's file layout so merges from upstream stay tractable.
 | `hub/server.mjs` | Codex and Gemini removed; `caffeinate` behind a platform check; a file logger; everything else as is |
 | `hub/config.mjs` | Windows directories, dropped and added keys, no `chmod` |
 | `hub/stt.mjs` | binary path, `windowsHide` |
-| `bin/glancecode` | `where.exe`, Task Scheduler service, host-based `claude`/`attach`/`ls`, `fetch` download, Codex/Gemini commands removed |
-| `bin/glancecode-hook.mjs` (new, replaces the bash script) | see Hooks |
+| `bin/codeaside` | `where.exe`, Task Scheduler service, host-based `claude`/`attach`/`ls`, `fetch` download, Codex/Gemini commands removed |
+| `bin/codeaside-hook.mjs` (new, replaces the bash script) | see Hooks |
 | `package.json` | `"os": ["win32"]`; `host/` in `files`; dependencies `@lydell/node-pty`, `@xterm/headless`, `@xterm/addon-serialize` |
 | `test/` | `transcript.test.mjs` kept; `codex`/`gemini` tests dropped; new tests for the host protocol and `pane.mjs` against a fake host; CI matrix on `windows-latest` |
-| `app/` | unchanged, except the "not in tmux" help text in `app/src/app.ts`, which already reads the agent from the hub and can say "start it with `glancecode claude`" |
+| `app/` | unchanged, except the "not in tmux" help text in `app/src/app.ts`, which already reads the agent from the hub and can say "start it with `codeaside claude`" |
 | docs | README rewritten for Windows; this file |
 
 ### On dependencies
@@ -335,7 +335,7 @@ one tree. That's a later conversation with upstream.
 
 ## Milestones
 
-1. **Host and local control.** `host/`, `pane.mjs`, `glancecode claude`/`attach`/
+1. **Host and local control.** `host/`, `pane.mjs`, `codeaside claude`/`attach`/
    `ls`; the hub follows hook-registered sessions and can type into them.
    Verified by: start a session at the desk, send a prompt with `curl` to the hub
    API, see it typed; approve a permission; interrupt.
@@ -411,7 +411,7 @@ Things the implementation learned that the design above didn't predict:
 - **Host idleness** counts only sessions, not control connections: the hub keeps
   one open for as long as it runs, and a host with nothing to hold should make way
   for a newer one.
-- The hook entry is `& "<node.exe>" "<...>\glancecode-hook.mjs" $PID` with
+- The hook entry is `& "<node.exe>" "<...>\codeaside-hook.mjs" $PID` with
   `"shell": "powershell"`, `async: true`, `timeout: 10`. For testing without
   touching `%USERPROFILE%\.claude\settings.json`, the same entry in a scratch
   project's `.claude\settings.json` works.

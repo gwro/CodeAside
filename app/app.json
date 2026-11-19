@@ -1,7 +1,7 @@
 {
-  "package_id": "dev.glancecode.glasses",
+  "package_id": "io.github.gwro.codeaside",
   "edition": "202601",
-  "name": "GlanceCode",
+  "name": "CodeAside",
   "version": "0.1.0",
   "min_app_version": "2.2.10",
   "min_sdk_version": "0.0.15",
@@ -13,7 +13,7 @@
     },
     {
       "name": "network",
-      "desc": "Connects only to the glancecode hub running on your own computer, over your private Tailscale network.",
+      "desc": "Connects only to the codeaside hub running on your own computer, over your private Tailscale network.",
       "whitelist": [
         "*.ts.net",
         "*.ts.net:7443"

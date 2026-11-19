@@ -169,7 +169,7 @@ export function startHub({ quiet = false, feed = true } = {}) {
     }
     if (!cwd || !existsSync(cwd) || !statSync(cwd).isDirectory()) throw new HttpError(400, "cwd must be an existing folder");
     const args = [...(cfg.claudeArgs || []), ...(resume ? ["--resume", resume] : [])];
-    const { name, target } = await paneCtl.launchClaude({ cwd, args, env: { GLANCECODE_HOOK_PORT: String(cfg.hookPort) }, pipe: cfg.hostPipe });
+    const { name, target } = await paneCtl.launchClaude({ cwd, args, env: { CODEASIDE_HOOK_PORT: String(cfg.hookPort) }, pipe: cfg.hostPipe });
     registry.expectLaunch(target, { name, origin: "glasses" });
     log(`launched ${name} in ${cwd}${resume ? ` (resume ${resume.slice(0, 8)})` : ""}`);
     // Handle the trust dialog in the background; the SessionStart hook registers the session.

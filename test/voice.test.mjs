@@ -40,7 +40,7 @@ test("downloadFile resumes a partial download and reports progress", async () =>
   for (let i = 0; i < body.length; i++) body[i] = i % 251;
   const { server, hits, url } = await serve(body);
   try {
-    const dir = mkdtempSync(join(tmpdir(), "glancecode-dl-"));
+    const dir = mkdtempSync(join(tmpdir(), "codeaside-dl-"));
     const dest = join(dir, "file.bin");
     writeFileSync(dest + ".part", body.subarray(0, 70_000)); // an interrupted earlier attempt
     const reports = [];
@@ -57,7 +57,7 @@ test("downloadFile starts over when the server ignores the range", async () => {
   const body = Buffer.from("x".repeat(50_000));
   const { server, url } = await serve(body, { ranges: false });
   try {
-    const dir = mkdtempSync(join(tmpdir(), "glancecode-dl-"));
+    const dir = mkdtempSync(join(tmpdir(), "codeaside-dl-"));
     const dest = join(dir, "file.bin");
     writeFileSync(dest + ".part", "garbage");
     await downloadFile(url, dest);

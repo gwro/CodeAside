@@ -1,14 +1,14 @@
 {
-  "name": "@gwro/glancecode-win",
+  "name": "@gwro/codeaside",
   "version": "0.1.0",
   "description": "Drive your Claude Code sessions from Even Realities G2 smart glasses, natively on Windows: live transcript, approvals, and hold-to-talk voice.",
   "type": "module",
   "bin": {
-    "glancecode": "bin/glancecode"
+    "codeaside": "bin/codeaside"
   },
   "files": [
-    "bin/glancecode",
-    "bin/glancecode-hook.mjs",
+    "bin/codeaside",
+    "bin/codeaside-hook.mjs",
     "host/",
     "hub/",
     "app/dist/",

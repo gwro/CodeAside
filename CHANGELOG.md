@@ -5,7 +5,11 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
-## Unreleased
+## 0.3.0 (glasses app 0.1.1)
+
+Curtain mode for the glasses. It is in the glasses app, so it needs the new build
+on the glasses (`npm run pack:personal`, or `codeaside pair --dev` to sideload);
+restart the hub (`codeaside service restart`) to be able to turn it off there.
 
 - Curtain mode, in the fork's copy of the glasses app, behind `curtainMode` (on
   by default). While a session works, a swipe down from its latest lines hides

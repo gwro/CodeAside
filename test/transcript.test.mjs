@@ -70,6 +70,27 @@ test("tool labels", () => {
   assert.equal(toolLabel("Bash", { command: "npm test", description: "Run the suite" }), "Run the suite");
   assert.equal(toolLabel("WebFetch", { url: "https://example.com/a" }), "example.com");
   assert.equal(toolLabel("mcp__github__create_issue", {}), "create_issue");
+  // PowerShell is the shell on Windows: labelled as Bash is, command when there is no description.
+  assert.equal(toolLabel("PowerShell", { command: "git status" }), "git status");
+});
+
+test("a tool label is cut to about a line, and kept long for a reader that fits it itself", () => {
+  const description = "Rebuild the glasses app, run the hub tests, and look at how a separate test hub can be started";
+  const short = toolLabel("PowerShell", { description });
+  assert.equal(short.length, 60);
+  assert.ok(short.endsWith("…"));
+  assert.equal(toolLabel("PowerShell", { description }, { full: true }), description);
+  assert.equal(toolLabel("Grep", { pattern: "x".repeat(900) }, { full: true }).length, 600);
+
+  const entry = { type: "assistant", uuid: "u1", timestamp: "2026-01-01T00:00:00Z", message: { content: [
+    { type: "tool_use", name: "PowerShell", input: { description } },
+    { type: "tool_use", name: "Read", input: { file_path: "C:/repo/app.ts" } },
+  ] } };
+  const [long, plain] = entryToItems(entry);
+  assert.equal(long.text, short);
+  assert.equal(long.full, description);
+  assert.equal(plain.text, "app.ts");
+  assert.equal("full" in plain, false); // nothing was cut, so nothing to add
 });
 
 test("TranscriptTail emits only complete new lines", async () => {

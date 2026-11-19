@@ -23,15 +23,16 @@ export function latestReply(items: Item[]): number {
 /**
  * The view shows the latest lines, with two exceptions. Once the user scrolls,
  * the view stays on the line they scrolled to. And, when asked to hold replies,
- * a reply whose first line would be off the top is held at that line, so it can
- * be read from its start. Either way the view returns to the latest lines when
- * the user scrolls down to them or asks for them, and that reply no longer
- * holds it.
+ * a reply that arrives while the session is open, and whose first line would be
+ * off the top, is held at that line, so it can be read from its start. Either
+ * way the view returns to the latest lines when the user scrolls down to them
+ * or asks for them, and that reply no longer holds it.
  */
 export class TranscriptView {
   private scrolledTo: Anchor | null = null;
   /** The reply the user has moved on from. */
   private readKey = "";
+  private opened = false;
   // As of the last place(). The keys are a copy: the hub trims its list in place.
   private keys: string[] = [];
   private starts: number[] = [];
@@ -47,6 +48,12 @@ export class TranscriptView {
     const maxTop = Math.max(0, layout.lines.length - page);
     const reply = latestReply(items);
     const replyKey = reply >= 0 ? items[reply].key : "";
+    if (!this.opened) {
+      // A session opens on its latest lines: only a reply that arrives while it
+      // is open is held at its start.
+      this.opened = true;
+      this.readKey = replyKey;
+    }
     const at = this.scrolledTo ? items.findIndex((it) => it.key === this.scrolledTo!.key) : -1;
     let top: number | null = null;
     if (this.scrolledTo && at >= 0) {

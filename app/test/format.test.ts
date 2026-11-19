@@ -68,6 +68,38 @@ test("items render with turn gaps and collapsed tool runs", () => {
   assert.deepEqual(starts, [0, 1, 2, 2, 2, 4, 6]);
 });
 
+test("a tool description is cut to the lines allowed, where the display runs out", () => {
+  const full = "Rebuild the glasses app, run the hub tests, and look at how a separate test hub can be started on other ports with its own configuration folder and data folder so the installed one stays up";
+  const items: Item[] = [{ key: "1", kind: "tool", tool: "PowerShell", text: "Rebuild the glasses app, run the hub tests, and look at how…", full }];
+  const indent = " ".repeat(Math.ceil(getTextWidth("▷ ") / getTextWidth(" ")));
+  const whole = wrap(`PowerShell ${full}`, W, "▷ ", indent);
+  assert.ok(whole.length >= 4, "the description needs more than three lines");
+
+  for (const n of [1, 2, 3]) {
+    const { lines } = layoutItems(items, W, n);
+    assert.equal(lines.length, n);
+    for (const l of lines) assert.ok(getTextWidth(l) <= W, `too wide (${getTextWidth(l)}): ${l}`);
+    // Everything before the cut is the text itself, and the cut is marked.
+    assert.deepEqual(lines.slice(0, n - 1), whole.slice(0, n - 1));
+    assert.ok(lines[n - 1].endsWith("…"));
+    const kept = lines[n - 1].slice(0, -1);
+    assert.ok(whole[n - 1].startsWith(kept));
+    // The last line is used up: with one more character of the text the ellipsis would not fit.
+    if (kept.length < whole[n - 1].length) assert.ok(getTextWidth(`${whole[n - 1].slice(0, kept.length + 1)}…`) > W);
+  }
+
+  // Room for all of it: no cut and no ellipsis.
+  assert.deepEqual(layoutItems(items, W, 6).lines, whole);
+  // Two lines unless told otherwise, and a bad setting falls back to that.
+  assert.equal(layoutItems(items, W).lines.length, 2);
+  assert.equal(layoutItems(items, W, 0).lines.length, 2);
+});
+
+test("a tool call the hub did not cut shows as it is", () => {
+  const items: Item[] = [{ key: "1", kind: "tool", tool: "Read", text: "app.ts" }];
+  assert.deepEqual(layoutItems(items, W, 1).lines, ["▷ Read app.ts"]);
+});
+
 test("model names shorten", () => {
   assert.equal(shortModel("claude-opus-5"), "Opus 5");
   assert.equal(shortModel("claude-fable-5-1[1m]"), "Fable 5.1");

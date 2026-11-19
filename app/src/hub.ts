@@ -1,6 +1,7 @@
 // Client for the glancecode hub: REST calls plus a replaying event stream.
 import type { Agent, HubEvent, Item, ModelChoice, RecentProject, RecentSession, SessionSummary } from "./types.ts";
 import { every } from "./timers.ts";
+import { TOOL_LINES } from "./format.ts";
 
 export interface HubConfig {
   url: string; // e.g. https://my-mac.tailnet-name.ts.net:7443
@@ -15,6 +16,8 @@ export interface Prefs {
   workingBrightness: number;
   /** Jump to a session's latest lines when the user starts to talk to it. */
   latestOnTalk: boolean;
+  /** Lines a tool call's description may take before it is cut. */
+  toolLines: number;
 }
 
 interface HubState {
@@ -38,8 +41,8 @@ export class Hub {
   items = new Map<string, Item[]>();
   /** Agents the hub can start. Older hubs don't say, and only run Claude Code. */
   agents: Agent[] = ["claude"];
-  /** Display preferences from the hub's config. Hubs that don't send them get the defaults. */
-  prefs: Prefs = { replyFromStart: false, workingBrightness: 4, latestOnTalk: false };
+  /** Display preferences from the hub's config. These are its defaults, for a hub that sends none. */
+  prefs: Prefs = { replyFromStart: true, workingBrightness: 0, latestOnTalk: true, toolLines: TOOL_LINES };
   private modelCache = new Map<string, ModelChoice[]>();
   connected = false;
   lastError = "";

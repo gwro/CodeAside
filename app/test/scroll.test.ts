@@ -13,6 +13,12 @@ const tool = (key: string, name: string): Item => ({ key, kind: "tool", tool: na
 const reply = (key: string, n: number): Item => ({ key, kind: "assistant", text: Array.from({ length: n }, (_, i) => `${key} line ${i + 1}`).join("\n") });
 
 const place = (view: TranscriptView, items: Item[], holdReplies = true) => view.place(items, layoutItems(items, W), PAGE, holdReplies);
+/** A view on a session opened while it showed `items`; what is pushed after that is new. */
+const open = (items: Item[]) => {
+  const view = new TranscriptView();
+  place(view, items);
+  return view;
+};
 
 test("latestReply is the newest reply since the last prompt", () => {
   assert.equal(latestReply([user("u1"), reply("a1", 2), tool("t1", "Read")]), 1);
@@ -21,14 +27,28 @@ test("latestReply is the newest reply since the last prompt", () => {
   assert.equal(latestReply([]), -1);
 });
 
-test("a reply that fits is shown with the latest lines", () => {
+test("a session opens on its latest lines, however long its last reply", () => {
   const view = new TranscriptView();
-  assert.equal(place(view, [user("u1"), reply("a1", 8)]), null);
+  const items = [user("u1"), reply("a1", 20)];
+  assert.equal(place(view, items), null);
+  items.push(tool("t1", "Read"));
+  assert.equal(place(view, items), null);
+  // A reply that arrives while it is open is held.
+  items.push(reply("a2", 20));
+  assert.equal(place(view, items), 22);
+});
+
+test("a reply that fits is shown with the latest lines", () => {
+  const items = [user("u1")];
+  const view = open(items);
+  items.push(reply("a1", 8));
+  assert.equal(place(view, items), null);
 });
 
 test("a reply longer than the screen is held at its first line", () => {
-  const view = new TranscriptView();
-  const items = [user("u1"), reply("a1", 20)];
+  const items = [user("u1")];
+  const view = open(items);
+  items.push(reply("a1", 20));
   assert.equal(place(view, items), 1);
   // It stays there while more arrives below it.
   items.push(tool("t1", "Read"), tool("t2", "Edit"));
@@ -36,16 +56,18 @@ test("a reply longer than the screen is held at its first line", () => {
 });
 
 test("a reply that fits is held once later lines would push its start off", () => {
-  const view = new TranscriptView();
-  const items = [user("u1"), reply("a1", 7)];
+  const items = [user("u1")];
+  const view = open(items);
+  items.push(reply("a1", 7));
   assert.equal(place(view, items), null);
   items.push(tool("t1", "Read"), tool("t2", "Edit"), tool("t3", "Bash"));
   assert.equal(place(view, items), 1);
 });
 
 test("a newer reply takes over, and a new prompt lets go", () => {
-  const view = new TranscriptView();
-  const items = [user("u1"), reply("a1", 20)];
+  const items = [user("u1")];
+  const view = open(items);
+  items.push(reply("a1", 20));
   assert.equal(place(view, items), 1);
   items.push(reply("a2", 15));
   assert.equal(place(view, items), 21);
@@ -54,8 +76,9 @@ test("a newer reply takes over, and a new prompt lets go", () => {
 });
 
 test("scrolling stays on the same line while the transcript changes around it", () => {
-  const view = new TranscriptView();
-  let items = [user("u0", "earlier"), reply("a0", 2), user("u1"), reply("a1", 20)];
+  let items = [user("u0", "earlier"), reply("a0", 2), user("u1")];
+  const view = open(items);
+  items.push(reply("a1", 20));
   const start = layoutItems(items, W).starts[3];
   assert.equal(place(view, items), start);
   view.scroll(3);
@@ -79,8 +102,9 @@ test("a scroll lands on the right line when the list was trimmed in place since 
 });
 
 test("scrolling down to the end returns to the latest, and that reply stops holding", () => {
-  const view = new TranscriptView();
-  const items = [user("u1"), reply("a1", 12)]; // 13 lines: tops 0 to 4
+  const items = [user("u1")];
+  const view = open(items);
+  items.push(reply("a1", 12)); // 13 lines: tops 0 to 4
   assert.equal(place(view, items), 1);
   view.scroll(3);
   assert.equal(place(view, items), null);
@@ -91,8 +115,9 @@ test("scrolling down to the end returns to the latest, and that reply stops hold
 });
 
 test("asking for the latest lets go of the reply", () => {
-  const view = new TranscriptView();
-  const items = [user("u1"), reply("a1", 20)];
+  const items = [user("u1")];
+  const view = open(items);
+  items.push(reply("a1", 20));
   assert.equal(place(view, items), 1);
   view.toLatest();
   assert.equal(place(view, items), null);
@@ -125,8 +150,9 @@ test("with holding off, a long reply shows its end, and scrolling still stays pu
 });
 
 test("a dialog is not hidden behind a held reply, but a scrolled view stays", () => {
-  const view = new TranscriptView();
-  const items = [user("u1"), reply("a1", 20)];
+  const items = [user("u1")];
+  const view = open(items);
+  items.push(reply("a1", 20));
   assert.equal(place(view, items, false), null);
   assert.equal(place(view, items), 1);
   view.scroll(3);

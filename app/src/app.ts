@@ -605,7 +605,7 @@ class SessionScreen implements Screen {
     if (!s) return { header: "Session closed", body: wrap("This session is no longer running. Double-tap to go back.", BODY_INNER_W), menu };
     const items = this.app.hub.items.get(this.id);
     if (!items) this.app.hub.ensureItems(this.id); // self-heal if the cache was dropped
-    const layout = items?.length ? layoutItems(items, BODY_INNER_W) : null;
+    const layout = items?.length ? layoutItems(items, BODY_INNER_W, this.app.hub.prefs.toolLines) : null;
     const transcript = !items ? ["Loading…"] : layout ? layout.lines : s.controllable ? ["Nothing here yet. Hold to talk."] : [];
     // A dialog outranks the start of a long reply: it shows with the latest lines.
     const holdReplies = this.app.hub.prefs.replyFromStart && !s.waiting;

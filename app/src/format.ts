@@ -1,6 +1,6 @@
 // Turn session items into wrapped display lines.
 import type { Item, SessionSummary, State } from "./types.ts";
-import { wrap, width } from "./text.ts";
+import { capLines, wrap, width } from "./text.ts";
 
 export const GLYPH: Record<State, string> = {
   starting: "○",
@@ -67,15 +67,20 @@ export interface Layout {
   starts: number[];
 }
 
+/** Lines a tool call's description may take when the hub doesn't say. */
+export const TOOL_LINES = 2;
+
 /**
  * Render items to lines and say where each item starts. Consecutive tool calls
- * with the same tool collapse, and a blank line separates turns.
+ * with the same tool collapse, and a blank line separates turns. A tool call's
+ * description takes at most `toolLines` lines, cut where the display runs out.
  */
-export function layoutItems(items: Item[], maxPx: number): Layout {
+export function layoutItems(items: Item[], maxPx: number, toolLines = TOOL_LINES): Layout {
   const lines: string[] = [];
   const starts: number[] = [];
   const userIndent = " ".repeat(Math.ceil(width(USER_PREFIX) / width(" ")));
   const toolIndent = " ".repeat(Math.ceil(width(TOOL_PREFIX) / width(" ")));
+  const toolCap = Number.isInteger(toolLines) && toolLines >= 1 ? toolLines : TOOL_LINES;
   let i = 0;
   while (i < items.length) {
     const it = items[i];
@@ -88,17 +93,19 @@ export function layoutItems(items: Item[], maxPx: number): Layout {
       }
       const groups: { tool: string; last: string; n: number }[] = [];
       for (const t of run) {
+        // The hub's own cut is about a line long whatever the display; fit the whole label here.
+        const text = t.full ?? t.text;
         const g = groups[groups.length - 1];
         if (g && g.tool === t.tool) {
           g.n++;
-          g.last = t.text;
-        } else groups.push({ tool: t.tool || "Tool", last: t.text, n: 1 });
+          g.last = text;
+        } else groups.push({ tool: t.tool || "Tool", last: text, n: 1 });
       }
       const shown = groups.length > 3 ? groups.slice(-3) : groups;
       if (groups.length > 3) lines.push(`${TOOL_PREFIX}${groups.length - 3} more steps`);
       for (const g of shown) {
         const label = g.n > 1 ? `${g.tool} ×${g.n} · ${g.last}` : `${g.tool} ${g.last}`;
-        lines.push(...wrap(label, maxPx, TOOL_PREFIX, toolIndent).slice(0, 2));
+        lines.push(...capLines(wrap(label, maxPx, TOOL_PREFIX, toolIndent), toolCap, maxPx));
       }
       continue;
     }

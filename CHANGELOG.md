@@ -7,17 +7,26 @@ is kept at the end for reference.
 
 ## Unreleased
 
-- New `replyFromStart` setting. When on, a reply too long for the glasses display
-  is held at its first line until you scroll down or tap for the latest, instead
-  of showing its end. It is off by default and needs the fork's copy of the
-  glasses app (`glancecode pair --dev`); the Even Hub build ignores it.
-- New `workingBrightness` setting, 0 to 4. Below 4, a session's screen dims to that
-  level while the session works and returns to full brightness when it finishes
-  or needs you. It is 4 (no dimming) by default and also needs the fork's copy of
-  the glasses app.
-- New `latestOnTalk` setting. When on, starting a hold to talk in a session that
-  is scrolled up or held at the start of a reply jumps to its latest lines first.
-  Off by default; it also needs the fork's copy of the glasses app.
+The fork's copy of the glasses app gains four settings in the hub's config. They
+need that copy of the app (`glancecode pair --dev`, or your own build); upstream's
+build in Even Hub ignores them.
+
+- `replyFromStart`, on by default. A reply that arrives while a session is open,
+  and is too long for the glasses display, is held at its first line until you
+  scroll down or tap for the latest, instead of showing its end. A session you
+  open starts on its latest lines.
+- `workingBrightness`, 0 to 4, 0 by default. Below 4, a session's screen dims to
+  that level while the session works and returns to full brightness when it
+  finishes or needs you.
+- `latestOnTalk`, on by default. Starting a hold to talk in a session that is
+  scrolled up or held at the start of a reply jumps to its latest lines first.
+- `toolLines`, 1 to 6, 2 by default. A tool call's description takes up to that
+  many lines and is cut where the display runs out, measured in pixels. The hub
+  now sends the whole description alongside its one-line cut, so the lines can
+  be filled; before, a description was cut at 50 or 60 characters whatever the
+  setting, which is about one line.
+- PowerShell tool calls are labelled as Bash ones are: by their description, or
+  by the command when there is none.
 - The fork's copy of the glasses app is now versioned with the fork, from 0.1.0,
   instead of carrying upstream's 0.3.1. `npm run pack:personal` works on Windows.
 - A hub restart no longer loses a session that runs in the host when the process

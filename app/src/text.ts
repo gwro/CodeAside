@@ -50,6 +50,19 @@ export function spread(left: string, right: string, lineW: number): string {
 }
 
 /**
+ * At most `max` of `lines`. When some are left out, the last one kept ends in an
+ * ellipsis and is shortened until that still fits `maxPx`.
+ */
+export function capLines(lines: string[], max: number, maxPx: number): string[] {
+  if (lines.length <= max) return lines;
+  const kept = lines.slice(0, max);
+  let last = kept[max - 1].replace(/\s+$/, "");
+  while (last.length > 1 && getTextWidth(last + "…") > maxPx) last = last.slice(0, -1).replace(/\s+$/, "");
+  kept[max - 1] = last + "…";
+  return kept;
+}
+
+/**
  * Greedy word wrap. Lines after the first are prefixed with `indent`.
  * Words wider than the line are split by character.
  */

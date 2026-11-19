@@ -9,6 +9,7 @@ import { basename } from "node:path";
  *   key: string,          // stable id (entry uuid + block index)
  *   kind: "user"|"assistant"|"tool"|"error"|"notice",
  *   text: string,
+ *   full?: string,        // for kind "tool": the label before it was cut to a line, when longer
  *   tool?: string,        // tool name for kind "tool"
  *   ts?: string,
  * }} Item
@@ -16,14 +17,23 @@ import { basename } from "node:path";
 
 const MAX_TEXT = 4000;
 
-export function toolLabel(name, input = {}) {
+/** A label no display shows whole; the glasses app cuts it to the lines it has. */
+const FULL_LABEL = 600;
+
+/**
+ * A short description of a tool call. By default it is cut to about a line.
+ * With `full`, it is left long enough for a reader that fits it to its own display.
+ */
+export function toolLabel(name, input = {}, { full = false } = {}) {
   const base = (p) => (typeof p === "string" && p ? basename(p) : "");
   const clip = (s, n = 60) => {
     const t = String(s ?? "").replace(/\s+/g, " ").trim();
-    return t.length > n ? t.slice(0, n - 1) + "…" : t;
+    const max = full ? FULL_LABEL : n;
+    return t.length > max ? t.slice(0, max - 1) + "…" : t;
   };
   switch (name) {
     case "Bash":
+    case "PowerShell":
       return clip(input.description || input.command);
     case "Read":
     case "Edit":
@@ -144,11 +154,14 @@ export function entryToItems(entry) {
         // thinking blocks are empty in the transcript and the rest are short narration.
         out.push({ key: `${uuid}:${i}`, kind: "assistant", text: clipText(b.thinking.trim()), ts });
       } else if (b?.type === "tool_use") {
+        const text = toolLabel(b.name, b.input || {});
+        const full = toolLabel(b.name, b.input || {}, { full: true });
         out.push({
           key: `${uuid}:${i}`,
           kind: "tool",
           tool: friendlyToolName(b.name),
-          text: toolLabel(b.name, b.input || {}),
+          text,
+          ...(full !== text ? { full } : {}),
           ts,
         });
       }

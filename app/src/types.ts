@@ -38,6 +38,8 @@ export interface Item {
   key: string;
   kind: "user" | "assistant" | "tool" | "error" | "notice";
   text: string;
+  /** A tool call's description before the hub cut it to about a line, when it was longer. */
+  full?: string;
   tool?: string;
   ts?: string;
 }

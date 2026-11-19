@@ -45,15 +45,18 @@ const DEFAULTS = {
   claudeArgs: [],
   // Keep the machine awake while the hub runs, so the glasses can reach it. Later milestone.
   preventSleep: true,
-  // On the glasses, hold a reply too long for the screen at its first line instead of
-  // showing its end. Only this fork's build of the glasses app reads it.
-  replyFromStart: false,
-  // On the glasses, the text brightness while a session works, from 0 (dimmest) to
-  // 4 (full, which means no dimming). Also read only by this fork's build of the app.
-  workingBrightness: 4,
-  // On the glasses, jump to a session's latest lines when a hold to talk starts in it.
-  // Also read only by this fork's build of the app.
-  latestOnTalk: false,
+  // The rest are for the glasses display, and only this fork's build of the glasses
+  // app reads them; upstream's build in Even Hub behaves as it always has.
+  // Hold a reply too long for the screen at its first line instead of showing its end.
+  replyFromStart: true,
+  // The text brightness while a session works, from 0 (dimmest) to 4 (full, which
+  // means no dimming).
+  workingBrightness: 0,
+  // Jump to a session's latest lines when a hold to talk starts in it.
+  latestOnTalk: true,
+  // Lines a tool call's description may take, 1 to 6. It is cut where the display
+  // runs out, measured in pixels.
+  toolLines: 2,
 };
 
 /** Read the raw config file without generating tokens (used at import time). */

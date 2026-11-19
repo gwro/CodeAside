@@ -221,6 +221,7 @@ export function startHub({ quiet = false, feed = true } = {}) {
         replyFromStart: cfg.replyFromStart === true,
         workingBrightness: [0, 1, 2, 3].includes(cfg.workingBrightness) ? cfg.workingBrightness : 4,
         latestOnTalk: cfg.latestOnTalk === true,
+        toolLines: [1, 2, 3, 4, 5, 6].includes(cfg.toolLines) ? cfg.toolLines : 2,
       };
       return send(res, 200, { seq, agents, prefs, sessions: registry.list().map((s) => s.summaryJSON()) });
     }

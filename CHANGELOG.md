@@ -5,6 +5,17 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
+## 0.3.1 (glasses app 0.1.2)
+
+A fix to curtain mode. It is in the glasses app, so it needs the new build on the
+glasses; the hub needs no restart.
+
+- Curtain mode left the screen blank once the session had finished or asked
+  something, until a swipe up. The curtain now only covers a session that is
+  working: when it stops, the screen is back, to read, scroll and answer as
+  usual, and the curtain returns by itself when the session works again. A
+  swipe up on the dots ends it.
+
 ## 0.3.0 (glasses app 0.1.1)
 
 Curtain mode for the glasses. It is in the glasses app, so it needs the new build

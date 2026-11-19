@@ -170,7 +170,8 @@ export function entryToItems(entry) {
   }
 
   if (entry.type === "attachment" && entry.attachment?.type === "queued_command") {
-    const p = String(entry.attachment.prompt || "").trim();
+    // A prompt queued with a pasted image is a list of blocks, not a string.
+    const p = textOf(entry.attachment.prompt).replace(/\[Image #\d+\]\s*/g, "[image] ").trim();
     if (p && !p.startsWith("<")) out.push({ key: uuid, kind: "user", text: clipText(p), ts });
     return out;
   }

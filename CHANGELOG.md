@@ -5,6 +5,13 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
+## 0.1.2
+
+- A message sent with a pasted image while Claude was busy showed on the glasses
+  as `[object Object],[object Object]`. Claude Code records such a queued message
+  as a list of text and image blocks, and the hub printed the list. It now shows
+  the text, with `[image]` for the picture.
+
 ## 0.1.1
 
 - README: the configuration table's Default column held two long paths that

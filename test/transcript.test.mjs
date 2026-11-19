@@ -60,6 +60,16 @@ test("queued prompts typed while busy show as user items", () => {
   assert.deepEqual([q.kind, q.text], ["user", "also run lint"]);
 });
 
+test("a queued prompt with a pasted image is a list of blocks, and shows its text", () => {
+  // As Claude Code writes it: the text names the image and the image follows as its own block.
+  const withText = { type: "attachment", uuid: "q2", attachment: { type: "queued_command", prompt: [{ type: "text", text: "[Image #1] is this cut off?" }, { type: "image", source: { type: "base64", data: "…" } }] } };
+  assert.deepEqual(entryToItems(withText).map((i) => [i.kind, i.text]), [["user", "[image] is this cut off?"]]);
+  const imageOnly = { type: "attachment", uuid: "q3", attachment: { type: "queued_command", prompt: [{ type: "text", text: "[Image #1]" }, { type: "image", source: {} }] } };
+  assert.deepEqual(entryToItems(imageOnly).map((i) => i.text), ["[image]"]);
+  // Nothing readable in it: no item, and never the blocks printed as objects.
+  assert.deepEqual(entryToItems({ type: "attachment", uuid: "q4", attachment: { type: "queued_command", prompt: [{ type: "image", source: {} }] } }), []);
+});
+
 test("meta: title, model and context size", () => {
   assert.deepEqual(entryMeta({ type: "ai-title", aiTitle: "Grocery fixes" }), { title: "Grocery fixes" });
   const m = entryMeta({ type: "assistant", message: { model: "claude-opus-5", usage: { input_tokens: 2, cache_read_input_tokens: 1000 } } });

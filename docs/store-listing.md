@@ -102,4 +102,23 @@ readable against a light background, and the color is the display's green.
 
 **Privacy policy URL:** https://github.com/gwro/CodeAside/blob/main/docs/privacy.md
 
-**Icon:** draw in the portal's 24×24 editor. Keep it to 2×2 pixel blocks.
+**Icon** (24×24, one bit: every pixel fully on or fully off): a terminal window
+with a prompt, and a solid panel to its side. In `docs/screenshots`:
+`icon.png` is white on black, `icon-transparent.png` white on nothing, and
+`icon-black-on-white.png` the inverse. It is drawn in 2×2 pixel blocks, so it can
+also be redrawn in the portal's 24×24 editor from this 12×12 grid:
+
+```text
+#########.##
+#.......#.##
+#.#.....#.##
+#..#....#.##
+#...#...#.##
+#....#..#.##
+#....#..#.##
+#...#...#.##
+#..#....#.##
+#.#..##.#.##
+#.......#.##
+#########.##
+```

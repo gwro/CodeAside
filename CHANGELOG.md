@@ -5,7 +5,14 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
-## Unreleased
+## 0.1.0
+
+First release: a Windows port of the hub and command-line tool of
+[GlanceCode](https://github.com/sousyllc/glancecode), with a glasses app of its own.
+It has been exercised against a real hub on Windows 11 with Even's simulator, and
+used with G2 glasses.
+
+### The glasses app and its settings
 
 The fork's copy of the glasses app gains seven settings in the hub's config. They
 need that copy of the app (`codeaside pair --dev`, or your own build); upstream's
@@ -60,13 +67,6 @@ build in Even Hub ignores them.
   or install it as your own build, and what to check when the glasses can't reach
   the hub. The store listing, privacy policy and security notes are rewritten for
   the fork: Claude Code only, Windows paths, and what the hub reads on the PC.
-- The hub has been paired and used with G2 glasses.
-
-## 0.1.0
-
-First release of the Windows port. Pre-release: exercised against a real hub on
-Windows 11 with Even's simulator for the glasses app, not yet with G2 glasses.
-
 ### Sessions
 
 - A **session host** replaces tmux: a small Node process runs Claude Code in a

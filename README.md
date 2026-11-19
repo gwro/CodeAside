@@ -123,7 +123,15 @@ On your phone:
 
 ## Install
 
-From a checkout of this repository, in PowerShell:
+In PowerShell:
+
+```powershell
+npm install -g @gwro/codeaside
+codeaside setup
+```
+
+Or from a checkout of this repository, which is what you want for changing the
+code or building the glasses app yourself:
 
 ```powershell
 git clone https://github.com/gwro/CodeAside.git
@@ -149,16 +157,16 @@ To let the glasses drive a session you start at your desk, start it through the
 host:
 
 ```powershell
-node bin\codeaside claude       # takes the same arguments as claude
+codeaside claude       # takes the same arguments as claude
 ```
 
 Sessions started any other way still appear on the glasses, marked view only.
 Closing the terminal window only detaches; the session keeps running and
 `codeaside attach` opens it again. Ctrl+] detaches deliberately.
 
-To have `codeaside` on your PATH instead of `node bin\codeaside`, run
-`npm install -g .` from the checkout. The installed service keeps working, since it
-refers to the checkout by absolute path.
+In a checkout, `npm install -g .` puts `codeaside` on your PATH as a link to the
+checkout, so the examples below work as written; without it, write
+`node bin\codeaside` in place of `codeaside`.
 
 ## The fork's copy of the glasses app
 
@@ -191,7 +199,7 @@ your checkout:
 
 ```powershell
 npm run build:app
-node bin\codeaside pair --dev
+codeaside pair --dev
 ```
 
 In the Even Realities app, open the Even Hub tab, then the developer section in
@@ -258,8 +266,8 @@ At your desk:
 Logs are in `%LOCALAPPDATA%\codeaside\logs`: `hub.log` for the hub and `host.log`
 for the session host.
 
-The examples use PowerShell. In Git Bash, write the path with forward slashes
-(`node bin/codeaside status`): Bash reads a backslash as an escape.
+The examples use PowerShell. In Git Bash, write paths with forward slashes
+(`node bin/codeaside status` in a checkout): Bash reads a backslash as an escape.
 
 ### If the glasses can't reach the hub
 

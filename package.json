@@ -12,7 +12,8 @@
     "host/",
     "hub/",
     "app/dist/",
-    "docs/",
+    "docs/privacy.md",
+    "docs/windows-design.md",
     "README.md",
     "LICENSE",
     "SECURITY.md",
@@ -42,11 +43,22 @@
     "even-hub"
   ],
   "license": "MIT",
+  "author": "Grzegorz Wrobel",
+  "homepage": "https://github.com/gwro/CodeAside#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gwro/CodeAside.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gwro/CodeAside/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@lydell/node-pty": "1.2.0-beta.18",
     "@xterm/addon-serialize": "0.14.0",
     "@xterm/headless": "6.0.0",
     "qrcode-terminal": "^0.12.0"
-  },
-  "private": true
+  }
 }

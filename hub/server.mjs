@@ -217,7 +217,8 @@ export function startHub({ quiet = false, feed = true } = {}) {
     }
 
     if (method === "GET" && path === "/api/state") {
-      return send(res, 200, { seq, agents, sessions: registry.list().map((s) => s.summaryJSON()) });
+      const prefs = { replyFromStart: cfg.replyFromStart === true };
+      return send(res, 200, { seq, agents, prefs, sessions: registry.list().map((s) => s.summaryJSON()) });
     }
 
     if (method === "GET" && path === "/api/recent") {

@@ -7,6 +7,19 @@ export interface HubConfig {
   token: string;
 }
 
+/** Display preferences, set in the hub's config file. */
+export interface Prefs {
+  /** Hold a reply too long for the screen at its first line instead of showing its end. */
+  replyFromStart: boolean;
+}
+
+interface HubState {
+  seq: number;
+  agents?: Agent[];
+  prefs?: Partial<Prefs>;
+  sessions: SessionSummary[];
+}
+
 type Listener = () => void;
 
 const DEFAULT_CLAUDE_MODELS: ModelChoice[] = [
@@ -21,6 +34,8 @@ export class Hub {
   items = new Map<string, Item[]>();
   /** Agents the hub can start. Older hubs don't say, and only run Claude Code. */
   agents: Agent[] = ["claude"];
+  /** Display preferences from the hub's config. Hubs that don't send them get the defaults. */
+  prefs: Prefs = { replyFromStart: false };
   private modelCache = new Map<string, ModelChoice[]>();
   connected = false;
   lastError = "";
@@ -78,9 +93,10 @@ export class Hub {
     if (this.connecting) return;
     this.connecting = true;
     try {
-      const state = await this.req<{ seq: number; agents?: Agent[]; sessions: SessionSummary[] }>("GET", "/api/state");
+      const state = await this.req<HubState>("GET", "/api/state");
       this.sessions = new Map(state.sessions.map((s) => [s.id, s]));
       this.agents = state.agents?.length ? state.agents : ["claude"];
+      this.prefs = { ...this.prefs, ...state.prefs };
       this.lastEventId = state.seq;
       this.openStream();
       this.connected = true;
@@ -139,9 +155,10 @@ export class Hub {
   /** After the stream comes back: refresh sessions and cached transcripts, keep the stream. */
   private async resync() {
     try {
-      const state = await this.req<{ seq: number; agents?: Agent[]; sessions: SessionSummary[] }>("GET", "/api/state");
+      const state = await this.req<HubState>("GET", "/api/state");
       this.sessions = new Map(state.sessions.map((s) => [s.id, s]));
       this.agents = state.agents?.length ? state.agents : ["claude"];
+      this.prefs = { ...this.prefs, ...state.prefs };
       for (const id of [...this.items.keys()]) {
         if (!this.sessions.has(id)) this.items.delete(id);
         else void this.loadItems(id).catch(() => {});

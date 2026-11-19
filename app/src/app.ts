@@ -2,7 +2,8 @@
 import { AudioInputSource, ImuReportPace, type EvenAppBridge } from "@evenrealities/even_hub_sdk";
 import { every, later, type Cancel } from "./timers.ts";
 import { BODY_INNER_W, BODY_LINES, HEADER_INNER_W, Display, type Frame, type MenuItem } from "./display.ts";
-import { GLYPH, ago, itemsToLines, shortModel, stateLabel } from "./format.ts";
+import { GLYPH, ago, layoutItems, shortModel, stateLabel } from "./format.ts";
+import { TranscriptView } from "./scroll.ts";
 import type { Hub } from "./hub.ts";
 import type { Action } from "./input.ts";
 import { padTo, spread, truncate, width, wrap } from "./text.ts";
@@ -498,7 +499,8 @@ function sessionMenu(models: ModelChoice[]): MenuItem[] {
 const SCROLL_STEP = 3;
 
 class SessionScreen implements Screen {
-  private scroll = 0; // lines up from the bottom
+  private view = new TranscriptView();
+  private following = true; // the latest lines are on screen, as of the last frame
   private cursor = 0;
   private dialogOptions: string[] | null = null;
   private dialogFor = "";
@@ -594,19 +596,21 @@ class SessionScreen implements Screen {
     if (!s) return { header: "Session closed", body: wrap("This session is no longer running. Double-tap to go back.", BODY_INNER_W), menu };
     const items = this.app.hub.items.get(this.id);
     if (!items) this.app.hub.ensureItems(this.id); // self-heal if the cache was dropped
-    const transcript = !items ? ["Loading…"] : items.length ? itemsToLines(items, BODY_INNER_W) : s.controllable ? ["Nothing here yet. Hold to talk."] : [];
-    const following = this.scroll === 0;
+    const layout = items?.length ? layoutItems(items, BODY_INNER_W) : null;
+    const transcript = !items ? ["Loading…"] : layout ? layout.lines : s.controllable ? ["Nothing here yet. Hold to talk."] : [];
+    // A dialog outranks the start of a long reply: it shows with the latest lines.
+    const holdReplies = this.app.hub.prefs.replyFromStart && !s.waiting;
+    const top = items && layout ? this.view.place(items, layout, BODY_LINES, holdReplies) : null;
+    const following = (this.following = top === null);
     const waitBlock = following ? this.waitingLines(s) : [];
     const room = BODY_LINES - Math.min(waitBlock.length, BODY_LINES - 2);
-    const maxScroll = Math.max(0, transcript.length - room);
-    this.scroll = Math.min(this.scroll, maxScroll);
-    const end = transcript.length - this.scroll;
-    const body = [...transcript.slice(Math.max(0, end - room), end), ...waitBlock].slice(-BODY_LINES);
+    const start = top ?? Math.max(0, transcript.length - room);
+    const body = [...transcript.slice(start, start + room), ...waitBlock].slice(-BODY_LINES);
 
     const activity = s.state === "working" && s.activity ? ` · ${s.activity}` : "";
     const left = `${GLYPH[s.state]} ${s.project} · ${stateLabel(s)}${activity}`;
     const rightParts = [];
-    if (this.scroll) rightParts.push(`↑${this.scroll}`);
+    if (!following) rightParts.push(`↓${transcript.length - start - room}`);
     if (!following && s.waiting) rightParts.push("◆ tap");
     rightParts.push(s.controllable ? shortModel(s.model) : "view only");
     return { header: spread(left, rightParts.filter(Boolean).join("  "), HEADER_INNER_W), body, menu };
@@ -615,20 +619,20 @@ class SessionScreen implements Screen {
   async action(a: Action) {
     const s = this.session;
     const page = SCROLL_STEP;
-    const waiting = !!s?.waiting && this.scroll === 0;
+    const waiting = !!s?.waiting && this.following;
     const opts = s && waiting ? this.options(s) : [];
     switch (a.type) {
       case "up":
         if (waiting && this.cursor > 0) this.cursor--;
-        else this.scroll += page;
+        else this.view.scroll(-page);
         return;
       case "down":
         if (waiting && this.cursor < opts.length - 1) this.cursor++;
-        else this.scroll = Math.max(0, this.scroll - page);
+        else this.view.scroll(page);
         return;
       case "tap":
-        if (this.scroll) {
-          this.scroll = 0;
+        if (!this.following) {
+          this.view.toLatest();
           return;
         }
         if (s && waiting && opts.length) {
@@ -636,6 +640,7 @@ class SessionScreen implements Screen {
           const r = await this.app.hub.choose(this.id, kind, this.cursor);
           this.app.toast(`Chose: ${r.chosen}`);
           this.cursor = 0;
+          this.view.toLatest(); // stay on what happens next, not on the reply before the dialog
           return;
         }
         this.app.toast(s?.controllable ? "Hold to talk" : this.viewOnlyHint());
@@ -644,7 +649,7 @@ class SessionScreen implements Screen {
         this.app.pop();
         return;
       case "menu":
-        if (a.id === 2) this.scroll = 0;
+        if (a.id === 2) this.view.toLatest();
         else if (a.id === 7) this.app.hub.refresh();
         else if (a.id === 1) {
           await this.app.hub.interrupt(this.id);
@@ -672,7 +677,7 @@ class SessionScreen implements Screen {
       const current = this.session;
       if (current?.waiting?.kind === "question") await this.app.hub.answer(this.id, text);
       else await this.app.hub.prompt(this.id, text);
-      this.scroll = 0;
+      this.view.toLatest();
     };
   }
 }

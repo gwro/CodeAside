@@ -61,12 +61,19 @@ export function tidyMarkdown(text: string): string {
 const USER_PREFIX = "» ";
 const TOOL_PREFIX = "▷ ";
 
+export interface Layout {
+  lines: string[];
+  /** For each item, the line it starts on. The tool calls of one run share a start. */
+  starts: number[];
+}
+
 /**
- * Render items to lines. Consecutive tool calls with the same tool collapse,
- * and a blank line separates turns.
+ * Render items to lines and say where each item starts. Consecutive tool calls
+ * with the same tool collapse, and a blank line separates turns.
  */
-export function itemsToLines(items: Item[], maxPx: number): string[] {
+export function layoutItems(items: Item[], maxPx: number): Layout {
   const lines: string[] = [];
+  const starts: number[] = [];
   const userIndent = " ".repeat(Math.ceil(width(USER_PREFIX) / width(" ")));
   const toolIndent = " ".repeat(Math.ceil(width(TOOL_PREFIX) / width(" ")));
   let i = 0;
@@ -75,7 +82,10 @@ export function itemsToLines(items: Item[], maxPx: number): string[] {
     if (it.kind === "tool") {
       // Collapse a run of tool calls: repeated tools become "Read ×3".
       const run: Item[] = [];
-      while (i < items.length && items[i].kind === "tool") run.push(items[i++]);
+      while (i < items.length && items[i].kind === "tool") {
+        starts.push(lines.length);
+        run.push(items[i++]);
+      }
       const groups: { tool: string; last: string; n: number }[] = [];
       for (const t of run) {
         const g = groups[groups.length - 1];
@@ -92,8 +102,9 @@ export function itemsToLines(items: Item[], maxPx: number): string[] {
       }
       continue;
     }
+    if (it.kind === "user" && lines.length) lines.push("");
+    starts.push(lines.length);
     if (it.kind === "user") {
-      if (lines.length) lines.push("");
       lines.push(...wrap(it.text, maxPx, USER_PREFIX, userIndent));
     } else if (it.kind === "assistant") {
       lines.push(...wrap(tidyMarkdown(it.text), maxPx));
@@ -104,6 +115,14 @@ export function itemsToLines(items: Item[], maxPx: number): string[] {
     }
     i++;
   }
-  // Collapse runs of blank lines produced at item boundaries.
-  return lines.filter((l, idx) => l !== "" || (idx > 0 && lines[idx - 1] !== ""));
+  // Collapse runs of blank lines produced at item boundaries, and move each
+  // item's start along with its line.
+  const kept: string[] = [];
+  const movedTo: number[] = [];
+  lines.forEach((l, idx) => {
+    movedTo.push(kept.length);
+    if (l !== "" || (idx > 0 && lines[idx - 1] !== "")) kept.push(l);
+  });
+  movedTo.push(kept.length);
+  return { lines: kept, starts: starts.map((s) => movedTo[s]) };
 }

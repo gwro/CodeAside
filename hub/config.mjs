@@ -45,6 +45,9 @@ const DEFAULTS = {
   claudeArgs: [],
   // Keep the machine awake while the hub runs, so the glasses can reach it. Later milestone.
   preventSleep: true,
+  // On the glasses, hold a reply too long for the screen at its first line instead of
+  // showing its end. Only this fork's build of the glasses app reads it.
+  replyFromStart: false,
 };
 
 /** Read the raw config file without generating tokens (used at import time). */

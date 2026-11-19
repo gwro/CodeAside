@@ -9,9 +9,11 @@ transcript, approve tool calls, answer questions, and hold to talk. Everything r
 on your own PC and your own Tailscale network.
 
 GlanceCode is an independent project by [sousy](https://github.com/sousyllc). This
-fork adapts its hub and command-line tool to Windows; the glasses app is upstream's,
-unchanged, and pairs with this hub as it would with the original. Neither project is
-affiliated with Anthropic, Even Realities or Microsoft.
+fork adapts its hub and command-line tool to Windows. The glasses app in Even Hub is
+upstream's and pairs with this hub as it would with the original; the fork's own
+copy of the app adds one optional setting, `replyFromStart` (see
+[Configuration](#configuration)). Neither project is affiliated with Anthropic, Even
+Realities or Microsoft.
 
 ## About this fork
 
@@ -201,7 +203,10 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `sttVocabulary` | | words the speech model should expect |
 | `ntfyTopic` | empty | optional phone push through ntfy when a session finishes or needs you |
 | `preventSleep` | true | keep the PC awake (not the display) while the hub runs and the PC is on AC power |
+| `replyFromStart` | false | on the glasses, hold a reply too long for the screen at its first line, so you read it from the start; swipe down to read on, tap for the latest. Off, a session always shows its latest lines. Needs this fork's copy of the glasses app, sideloaded with `glancecode pair --dev`; the Even Hub build ignores it |
 | `bindTailscaleIP` | false | also listen on the raw Tailscale IP over plain HTTP, for development |
+
+Restart the hub after changing the file: `glancecode service restart`.
 
 ## Limitations
 

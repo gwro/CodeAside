@@ -5,6 +5,16 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
+## Unreleased
+
+- New `replyFromStart` setting. When on, a reply too long for the glasses display
+  is held at its first line until you scroll down or tap for the latest, instead
+  of showing its end. It is off by default and needs the fork's copy of the
+  glasses app (`glancecode pair --dev`); the Even Hub build ignores it.
+- A scrolled transcript now stays on the same line while new lines arrive, and the
+  header counts the lines below the view (`↓13`).
+- The hub has been paired and used with G2 glasses.
+
 ## 0.1.0
 
 First release of the Windows port. Pre-release: exercised against a real hub on

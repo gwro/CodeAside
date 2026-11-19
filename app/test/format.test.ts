@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { getTextWidth } from "@evenrealities/pretext";
 import { padTo, sanitize, spread, truncate, wrap } from "../src/text.ts";
-import { itemsToLines, shortModel, tidyMarkdown } from "../src/format.ts";
+import { layoutItems, shortModel, tidyMarkdown } from "../src/format.ts";
 import type { Item } from "../src/types.ts";
 
 const W = 568;
@@ -54,7 +54,8 @@ test("items render with turn gaps and collapsed tool runs", () => {
     { key: "6", kind: "assistant", text: "Done." },
     { key: "7", kind: "user", text: "thanks" },
   ];
-  assert.deepEqual(itemsToLines(items, W), [
+  const { lines, starts } = layoutItems(items, W);
+  assert.deepEqual(lines, [
     "» fix the grocery rows",
     "Looking at it.",
     "▷ Read ×2 · grocery_row.dart",
@@ -63,6 +64,8 @@ test("items render with turn gaps and collapsed tool runs", () => {
     "",
     "» thanks",
   ]);
+  // One start per item; the three tool calls share their run's first line.
+  assert.deepEqual(starts, [0, 1, 2, 2, 2, 4, 6]);
 });
 
 test("model names shorten", () => {

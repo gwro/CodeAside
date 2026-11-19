@@ -5,7 +5,12 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
-## Unreleased
+## 0.2.0
+
+A prompt from the glasses now interrupts a working session by default, and three
+faults found against Claude Code 2.1.328 are fixed. Restart the hub to take the
+update (`codeaside service restart`); the fix to the session host loads when its
+last session has ended.
 
 - `sendNowWhenWorking`, on by default. A prompt sent from the glasses to a session
   that is working no longer waits in Claude Code's queue for the turn to end: the

@@ -29,7 +29,8 @@ too.
 - Keys are only sent to a session after the matching dialog is read back from the
   terminal, and prompts are refused while a permission dialog is open.
 - The hub reads a session's screen to do that, and to find a prompt Claude Code
-  suggests. A suggested prompt is shown on the glasses and never sent by itself.
+  suggests. A suggested prompt is shown on the glasses and sent only when you tap
+  it and then tap again to confirm; `sendSuggestionOnTap` turns that off.
 
 ## Out of scope
 

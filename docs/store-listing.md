@@ -10,11 +10,11 @@ glasses app" in the [README](../README.md).
 
 **Name** (20 characters max): GlanceCode Win
 
-**Tagline / short description:**
-Your Claude Code sessions on your glasses. Watch progress, approve, and talk back.
-
-Shorter, if the field is tight:
+**Tagline** (50 characters max):
 Claude Code on your G2: watch, approve, talk back.
+
+**Short description**, where a field allows more:
+Your Claude Code sessions on your glasses. Watch progress, approve, and talk back.
 
 **Description:**
 
@@ -29,7 +29,8 @@ you work with them from your G2, without taking the session over.
 - Start a Claude Code session in a recent project, or resume an earlier one.
 - Interrupt a session, compact it, or switch its model from the menu.
 - The screen dims while a session works and brightens when it is done or needs you.
-- See the next prompt Claude Code suggests, when it suggests one.
+- See the next prompt Claude Code suggests, when it suggests one, and send it
+  with two taps.
 - Keep working in the same session from your glasses and your PC at the same time.
   Nothing is copied or split, so you can switch whenever you like.
 

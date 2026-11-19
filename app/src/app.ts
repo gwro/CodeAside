@@ -16,6 +16,8 @@ const CURSOR = "▶ ";
 const NO_CURSOR = padTo("", width(CURSOR)); // spaces measured to the cursor's pixel width
 const SUGGESTION = "→ ";
 const NO_SUGGESTION = padTo("", width(SUGGESTION));
+/** How long a first tap on a suggestion waits for the second one that sends it. */
+const SUGGESTION_CONFIRM_MS = 8000;
 
 interface Screen {
   frame(): Frame;
@@ -508,6 +510,8 @@ class SessionScreen implements Screen {
   private view = new TranscriptView();
   private following = true; // the latest lines are on screen, as of the last frame
   private wasWaiting = false; // a dialog was open, as of the last frame
+  private armed: string | null = null; // the suggestion a first tap chose
+  private armTimer: Cancel | null = null;
   private cursor = 0;
   private dialogOptions: string[] | null = null;
   private dialogFor = "";
@@ -602,10 +606,39 @@ class SessionScreen implements Screen {
     return lines;
   }
 
-  /** The prompt Claude Code suggests next, shown while the session waits for one. */
+  /** The prompt Claude Code suggests next, while the session waits for one and shows it. */
+  private suggestion(s: SessionSummary | undefined): string {
+    return s && this.app.hub.prefs.showSuggestions && s.state === "idle" && !s.waiting ? s.suggestion || "" : "";
+  }
+
+  /** A first tap on this suggestion is waiting for the second. */
+  private armedFor(text: string): boolean {
+    return !!text && this.armed === text;
+  }
+
+  /**
+   * Wait for a second tap on `text`, or stop waiting. The wait ends by a timer
+   * that also redraws, so the hint on screen and what a tap does stay the same
+   * thing even if the timer runs late.
+   */
+  private arm(text: string | null) {
+    this.armTimer?.cancel();
+    this.armTimer = null;
+    this.armed = text;
+    if (text) {
+      this.armTimer = later(() => {
+        this.armed = null;
+        this.app.render();
+      }, SUGGESTION_CONFIRM_MS);
+    }
+  }
+
   private suggestionLines(s: SessionSummary): string[] {
-    if (!this.app.hub.prefs.showSuggestions || !s.suggestion || s.state !== "idle") return [];
-    return ["", ...capLines(wrap(s.suggestion, BODY_INNER_W, SUGGESTION, NO_SUGGESTION), 2, BODY_INNER_W)];
+    const text = this.suggestion(s);
+    if (!text) return [];
+    const lines = ["", ...capLines(wrap(text, BODY_INNER_W, SUGGESTION, NO_SUGGESTION), 2, BODY_INNER_W)];
+    if (this.armedFor(text)) lines.push(truncate(`${NO_SUGGESTION}tap again to send · double-tap to cancel`, BODY_INNER_W));
+    return lines;
   }
 
   frame(): Frame {
@@ -655,6 +688,10 @@ class SessionScreen implements Screen {
     const page = SCROLL_STEP;
     const waiting = !!s?.waiting && this.following;
     const opts = s && waiting ? this.options(s) : [];
+    // Only a second tap, straight after the first, sends a suggestion: anything else calls it off.
+    const suggestion = this.following && s?.controllable && this.app.hub.prefs.sendSuggestionOnTap ? this.suggestion(s) : "";
+    const armed = this.armedFor(suggestion);
+    this.arm(null);
     switch (a.type) {
       case "up":
         if (waiting && this.cursor > 0) this.cursor--;
@@ -677,9 +714,21 @@ class SessionScreen implements Screen {
           this.view.toLatest(); // stay on what happens next, not on the reply before the dialog
           return;
         }
+        if (s && suggestion && !armed) {
+          this.arm(suggestion);
+          return;
+        }
+        if (s && suggestion) {
+          await this.app.hub.prompt(this.id, suggestion);
+          s.suggestion = null; // the hub says so too, once Claude Code has taken the prompt
+          this.app.toast("Sent");
+          this.view.toLatest();
+          return;
+        }
         this.app.toast(s?.controllable ? "Hold to talk" : this.viewOnlyHint());
         return;
       case "doubleTap":
+        if (armed) return; // called off above
         this.app.pop();
         return;
       case "menu":

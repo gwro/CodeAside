@@ -22,6 +22,8 @@ export interface Prefs {
   latestOnPrompt: boolean;
   /** Show the prompt Claude Code suggests next, when the hub reports one. */
   showSuggestions: boolean;
+  /** Let a tap on a shown suggestion, confirmed by a second tap, send it as the next prompt. */
+  sendSuggestionOnTap: boolean;
 }
 
 interface HubState {
@@ -46,7 +48,7 @@ export class Hub {
   /** Agents the hub can start. Older hubs don't say, and only run Claude Code. */
   agents: Agent[] = ["claude"];
   /** Display preferences from the hub's config. These are its defaults, for a hub that sends none. */
-  prefs: Prefs = { replyFromStart: true, workingBrightness: 0, latestOnTalk: true, toolLines: TOOL_LINES, latestOnPrompt: true, showSuggestions: true };
+  prefs: Prefs = { replyFromStart: true, workingBrightness: 0, latestOnTalk: true, toolLines: TOOL_LINES, latestOnPrompt: true, showSuggestions: true, sendSuggestionOnTap: true };
   private modelCache = new Map<string, ModelChoice[]>();
   connected = false;
   lastError = "";

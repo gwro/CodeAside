@@ -512,7 +512,8 @@ What the copy adds, each behind a setting in the hub's config:
   that names no size resizes nothing. The hub takes that, drops the connection,
   and looks for dim text alone in the box. This needed no change to the host,
   which matters because a running host only takes new code when its last session
-  ends.
+  ends. Two taps send a shown suggestion (`sendSuggestionOnTap`): the first asks
+  for the second, and the hub then types the text as any prompt from the glasses.
 
 **Restoring sessions after a hub restart.** A session in a host pane was dropped
 when the process id saved for it had exited, and came back, as "starting", only at

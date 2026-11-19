@@ -7,7 +7,7 @@ is kept at the end for reference.
 
 ## Unreleased
 
-The fork's copy of the glasses app gains six settings in the hub's config. They
+The fork's copy of the glasses app gains seven settings in the hub's config. They
 need that copy of the app (`glancecode pair --dev`, or your own build); upstream's
 build in Even Hub ignores them.
 
@@ -32,6 +32,9 @@ build in Even Hub ignores them.
   its input box, the glasses show it under the session's latest lines. The hub
   reads it off the screen of sessions that run in the host: dim text alone in
   the input box, which typed text never is.
+- `sendSuggestionOnTap`, on by default. A tap on a shown suggestion asks for a
+  second tap, and the second sends the suggestion as the next prompt. The wait
+  for the second tap ends after eight seconds, or at a double-tap or a swipe.
 - PowerShell tool calls are labelled as Bash ones are: by their description, or
   by the command when there is none.
 - The fork's copy of the glasses app is now versioned with the fork, from 0.1.0,

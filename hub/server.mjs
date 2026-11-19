@@ -225,6 +225,7 @@ export function startHub({ quiet = false, feed = true } = {}) {
         toolLines: [1, 2, 3, 4, 5, 6].includes(cfg.toolLines) ? cfg.toolLines : 2,
         latestOnPrompt: cfg.latestOnPrompt === true,
         showSuggestions: cfg.showSuggestions === true,
+        sendSuggestionOnTap: cfg.sendSuggestionOnTap === true,
       };
       return send(res, 200, { seq, agents, prefs, sessions: registry.list().map((s) => s.summaryJSON()) });
     }

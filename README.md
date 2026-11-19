@@ -95,7 +95,7 @@ With the fork's own copy of the app, also:
   finishes or needs you.
 - Tool descriptions fill the lines you allow them and are cut where the display
   ends, not at a fixed number of characters.
-- The next prompt Claude Code suggests, when it suggests one.
+- The next prompt Claude Code suggests, when it suggests one. Two taps send it.
 
 ## Requirements
 
@@ -161,7 +161,7 @@ refers to the checkout by absolute path.
 ## The fork's copy of the glasses app
 
 The app in `app/` started as upstream's 0.3.1 and is now versioned with the fork.
-It reads six display settings from the hub, all described under
+It reads seven display settings from the hub, all described under
 [Configuration](#configuration):
 
 | Setting | What it does |
@@ -172,6 +172,7 @@ It reads six display settings from the hub, all described under
 | `latestOnPrompt` | jumps to the latest lines when a prompt is sent or a dialog answered, at the desk too |
 | `toolLines` | how many lines a tool call's description may take |
 | `showSuggestions` | shows the next prompt Claude Code suggests |
+| `sendSuggestionOnTap` | lets two taps send that suggestion |
 
 Apart from the settings, a view you have scrolled stays on the same line while new
 lines arrive, and the header shows how many lines are below it (`↓13`).
@@ -221,7 +222,7 @@ being published:
 | Gesture | Session list | Session |
 |---|---|---|
 | Swipe | move | scroll, or move between options |
-| Tap | open | choose the highlighted option, or jump to the latest |
+| Tap | open | choose the highlighted option, or jump to the latest; twice, to send a suggested prompt |
 | Hold | talk to the highlighted session | talk, or answer an open question; hold again to redo |
 | Double-tap | exit | back |
 | Tap then hold | menu | interrupt, jump to latest, switch model, compact |
@@ -308,8 +309,9 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `toolLines` | 2 | on the glasses, the lines a tool call's description may take, 1 to 6. A longer description is cut where the display runs out, measured in pixels, and ends in "…" |
 | `latestOnPrompt` | true | on the glasses, jump to a session's latest lines when a prompt is sent to it or a dialog in it is answered, at the desk as well as from the glasses. With `false`, a view you have scrolled stays where it is |
 | `showSuggestions` | true | on the glasses, show the next prompt Claude Code suggests, when it suggests one, under an idle session's latest lines, marked `→`. Claude Code only draws it in its input box, so the hub reads it off the screen of sessions started with `glancecode claude`; view-only sessions show none. With `false`, the hub doesn't look |
+| `sendSuggestionOnTap` | true | on the glasses, let a tap on a shown suggestion send it as your next prompt once a second tap confirms it. After the first tap the glasses ask for the second for eight seconds; a double-tap or a swipe calls it off. With `false`, a suggestion is only shown |
 
-The last six are for [the fork's copy of the glasses app](#the-forks-copy-of-the-glasses-app).
+The last seven are for [the fork's copy of the glasses app](#the-forks-copy-of-the-glasses-app).
 Upstream's build in Even Hub ignores them and behaves as it always has. A setting
 left out of the file has its default, so the file only needs the ones you change.
 
@@ -324,8 +326,9 @@ keep running through a restart; a message being dictated at that moment is lost.
 - Sessions must be started with `glancecode claude` for the glasses to type into
   them. Others are view only, and show no suggested prompts, since the hub can't
   read their screen.
-- A suggested prompt is shown, not sent: tapping it does nothing. It appears a few
-  seconds after Claude Code draws it, and only when Claude Code offers one.
+- A suggested prompt appears a few seconds after Claude Code draws it, and only
+  when Claude Code offers one. Sending it types it into the session as a prompt
+  of yours, so it runs with whatever permissions the session has.
 - The app makes no sound and no vibration; the screen is its only signal. Dimming
   while a session works is the nearest thing to an alert: the screen brightens
   when it is done.

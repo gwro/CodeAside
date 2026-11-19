@@ -63,6 +63,9 @@ const DEFAULTS = {
   // Show the next prompt Claude Code suggests in its input box, when it suggests
   // one, under an idle session's latest lines. The hub reads it off the screen.
   showSuggestions: true,
+  // Let a tap on a shown suggestion send it as the next prompt, once a second tap
+  // confirms it.
+  sendSuggestionOnTap: true,
 };
 
 /** Read the raw config file without generating tokens (used at import time). */

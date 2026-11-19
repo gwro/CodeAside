@@ -1,9 +1,7 @@
 # GlanceCode for Windows
 
-> **Untested on real glasses, provided as-is.** This port has been exercised
-> against a real hub on Windows 11 using Even's simulator for the glasses app, but
-> it has not yet been used with G2 glasses. It comes with no guarantees or
-> support; use it at your own risk, as the [MIT license](LICENSE) states.
+> **Provided as-is.** This port comes with no guarantees or support; use it at
+> your own risk, as the [MIT license](LICENSE) states.
 
 A Windows-native port of [GlanceCode](https://github.com/sousyllc/glancecode):
 drive your Claude Code sessions from Even Realities G2 glasses. See the live
@@ -50,8 +48,8 @@ is already waiting on a dialog should find it on screen. Both are handled here.
 **Status.** The port is feature-complete. Sessions, the live transcript, approvals
 with the real option labels, interrupt, model switching, new and resumed sessions,
 the background service and hold to talk have all been exercised against a real hub
-on Windows 11, using Even's simulator for the glasses app. Testing on the glasses
-themselves is the remaining step.
+on Windows 11, using Even's simulator for the glasses app, and the hub has since
+been paired and used with G2 glasses.
 
 ## How it works
 

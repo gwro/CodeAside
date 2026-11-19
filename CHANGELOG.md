@@ -18,6 +18,8 @@ is kept at the end for reference.
 - New `latestOnTalk` setting. When on, starting a hold to talk in a session that
   is scrolled up or held at the start of a reply jumps to its latest lines first.
   Off by default; it also needs the fork's copy of the glasses app.
+- The fork's copy of the glasses app is now versioned with the fork, from 0.1.0,
+  instead of carrying upstream's 0.3.1. `npm run pack:personal` works on Windows.
 - A hub restart no longer loses a session that runs in the host when the process
   id saved for it has exited; it used to reappear only at its next hook.
 - A scrolled transcript now stays on the same line while new lines arrive, and the

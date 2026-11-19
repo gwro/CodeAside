@@ -11,7 +11,7 @@
 // Personal builds: app.local.json (git-ignored) is merged over app.json, for
 // example a different package_id or extra whitelist origins for a dev machine:
 //   { "package_id": "com.example.myglance", "extraWhitelist": ["http://100.101.102.103:7717"] }
-import { execFileSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -43,7 +43,12 @@ if (existsSync("app.local.json") && !args.includes("--store")) {
 }
 
 console.log(`version ${manifest.version}`);
-const run = (cmd, cmdArgs) => execFileSync(cmd, cmdArgs, { stdio: "inherit" });
+// On Windows npx is a .cmd file, which only the shell can start, and the shell
+// takes one command line: quote the arguments that hold spaces.
+const run = (cmd, cmdArgs) =>
+  process.platform === "win32"
+    ? execSync([cmd, ...cmdArgs.map((a) => (/\s/.test(a) ? `"${a}"` : a))].join(" "), { stdio: "inherit" })
+    : execFileSync(cmd, cmdArgs, { stdio: "inherit" });
 run("npx", ["tsc", "--noEmit"]);
 run("npx", ["vite", "build"]);
 const dir = mkdtempSync(join(tmpdir(), "glancecode-pack-"));

@@ -7,7 +7,7 @@ is kept at the end for reference.
 
 ## Unreleased
 
-The fork's copy of the glasses app gains four settings in the hub's config. They
+The fork's copy of the glasses app gains six settings in the hub's config. They
 need that copy of the app (`glancecode pair --dev`, or your own build); upstream's
 build in Even Hub ignores them.
 
@@ -25,6 +25,13 @@ build in Even Hub ignores them.
   now sends the whole description alongside its one-line cut, so the lines can
   be filled; before, a description was cut at 50 or 60 characters whatever the
   setting, which is about one line.
+- `latestOnPrompt`, on by default. A prompt sent to a session, or a dialog in it
+  answered, at the desk as well as from the glasses, brings a scrolled view back
+  to the latest lines.
+- `showSuggestions`, on by default. When Claude Code suggests the next prompt in
+  its input box, the glasses show it under the session's latest lines. The hub
+  reads it off the screen of sessions that run in the host: dim text alone in
+  the input box, which typed text never is.
 - PowerShell tool calls are labelled as Bash ones are: by their description, or
   by the command when there is none.
 - The fork's copy of the glasses app is now versioned with the fork, from 0.1.0,
@@ -33,6 +40,14 @@ build in Even Hub ignores them.
   id saved for it has exited; it used to reappear only at its next hook.
 - A scrolled transcript now stays on the same line while new lines arrive, and the
   header counts the lines below the view (`↓13`).
+- `pair --dev` printed a sideload QR code without the token on Windows, because
+  the shell cut the address at its `&`. The address is now quoted.
+- The phone screen of the fork's copy of the app links to this repository's setup
+  guide and privacy policy, not upstream's.
+- Documentation: the README covers the fork's copy of the app, how to sideload it
+  or install it as your own build, and what to check when the glasses can't reach
+  the hub. The store listing, privacy policy and security notes are rewritten for
+  the fork: Claude Code only, Windows paths, and what the hub reads on the PC.
 - The hub has been paired and used with G2 glasses.
 
 ## 0.1.0

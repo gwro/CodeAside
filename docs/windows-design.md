@@ -5,8 +5,10 @@ needed at runtime. The glasses app is untouched. The first version follows Claud
 Code only; Codex and Gemini CLI are out of scope, but the seams upstream uses for
 them are kept so they can come back later.
 
-Status: milestone 1 implemented (host, pane layer, hook, CLI sessions). See
-"What milestone 1 found" at the end for what differed from this design.
+Status: all four milestones implemented, and the port has run on G2 glasses. Each
+"What milestone N found" section at the end records what differed from this design.
+The last section, "After the port", covers what changed once it was in use; in
+particular, the glasses app is no longer untouched.
 
 ## What stays the same
 
@@ -477,3 +479,53 @@ Things the implementation learned that the design above didn't predict:
   past sessions with their titles, and the resumed session shows its history.
 - `pair` draws the QR code with `qrcode-terminal` (pure JS, no dependencies),
   since `qrencode` isn't a Windows staple.
+
+## After the port
+
+Using the port on G2 glasses changed two things this design took as fixed.
+
+**The glasses app is no longer upstream's, unchanged.** `app/` is the fork's own
+copy, versioned with the fork from 0.1.0. Upstream's build in Even Hub still pairs
+with this hub: what the hub adds to the API is extra fields (`prefs` in
+`/api/state`, `full` on a tool item, `suggestion` on a session) that upstream's app
+ignores. The fork's copy is sideloaded from the hub with `pair --dev` or installed
+as a private or beta build; the README has both.
+
+What the copy adds, each behind a setting in the hub's config:
+
+- **A long reply starts at its first line** (`replyFromStart`). The view used to
+  be a number of lines up from the bottom, so it drifted as lines arrived. It is
+  now anchored to a transcript item and an offset in it (`app/src/scroll.ts`),
+  which also keeps a scrolled view still. Only a reply that arrives while the
+  session is open is held; a session opens on its latest lines.
+- **The screen dims while a session works** (`workingBrightness`). The SDK has no
+  display brightness, but a text container takes a `textColor` from 0 to 4. A
+  change of level has to be sent to both containers even when their text is the
+  same, and a rebuilt page has to repeat it, or it falls back to full.
+- **Tool descriptions are cut by pixels** (`toolLines`). The hub cut them at 50 or
+  60 characters, about one line, before the app saw them. It now sends the whole
+  description as well, and the app cuts it at the end of the last line allowed.
+- **Suggested prompts** (`showSuggestions`). Claude Code draws a suggestion as dim
+  text in its input box and records it nowhere else: not in the transcript, not
+  through a hook. The plain screen read can't tell it from typed text, but the
+  host already paints a styled screen for a client that attaches, and an attach
+  that names no size resizes nothing. The hub takes that, drops the connection,
+  and looks for dim text alone in the box. This needed no change to the host,
+  which matters because a running host only takes new code when its last session
+  ends.
+
+**Restoring sessions after a hub restart.** A session in a host pane was dropped
+when the process id saved for it had exited, and came back, as "starting", only at
+its next hook. A pane session is now restored whatever that id says, and the first
+sweep asks the host, as the sweep itself already did.
+
+Smaller findings:
+
+- `cmd.exe` splits an unquoted argument at `&`. The sideload QR code lost the token
+  that way, and the shell tried to run `token=...`. Commands that go through the
+  shell on Windows, as `npx` must, are built as one quoted line.
+- `execFileSync("npx", ...)` fails on Windows, where `npx` is a `.cmd` file.
+- The hub client trims its item list in place once it is full, so anything kept
+  from one frame to the next has to be a copy.
+- In the simulator, a long press without its release leaves the app deaf to the
+  next one.

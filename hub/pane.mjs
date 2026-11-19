@@ -64,6 +64,29 @@ export async function capture(target, lines = 60) {
 }
 
 /**
+ * Numbered options that came back as one line, each on a line of its own. A host
+ * started before it learned better joins a redrawn row to the one above (see
+ * screen() in host/host.mjs), and it keeps running while it has sessions:
+ * "❯ 1. Yes  2. No" would be read as a single option called "Yes  2. No".
+ */
+function splitOptions(line) {
+  const out = [];
+  let rest = line;
+  for (;;) {
+    const n = /^\s*(?:❯\s*)?(\d+)\.\s/.exec(rest)?.[1];
+    // Only the next number, after the indent of an option's row or the cursor, so
+    // a number inside a label stays there.
+    const next = n && `${Number(n) + 1}\\.\\s`;
+    const gap = n && new RegExp(`\\s{2,}(?=${next})|\\s+(?=❯\\s*${next})`).exec(rest);
+    if (!gap) break;
+    out.push(rest.slice(0, gap.index));
+    rest = rest.slice(gap.index);
+  }
+  out.push(rest);
+  return out;
+}
+
+/**
  * What is Claude Code showing at the bottom of the pane?
  * @returns {{kind: "permission"|"question"|"trust"|"input"|"unknown", options: string[]}}
  */
@@ -71,7 +94,7 @@ export function readDialog(screen) {
   // A rule that fills the row comes back joined to the row under it, as one wrapped
   // row, so the input box reads "────…────❯ text". Put the line break back.
   const rows = String(screen).replace(/^(─{20,})(?!─)(?=.*\S)/gm, "$1\n");
-  const tail = rows.split("\n").filter((l) => l.trim()).slice(-30);
+  const tail = rows.split("\n").flatMap(splitOptions).filter((l) => l.trim()).slice(-30);
   const joined = tail.join("\n");
   const options = [];
   for (const l of tail) {

@@ -104,12 +104,23 @@ export function startHost({ pipe = defaultPipe(), log = () => {}, exitWhenIdle =
       // rows under the last thing drawn, so a short screen isn't all blanks.
       const b = this.term.buffer.active;
       const out = [];
+      // A row's wrapped mark outlives the text that wrapped onto it: a redraw that
+      // moves the cursor there and writes a short line of its own leaves it set,
+      // and "1. Yes" and "2. No" would come back as one line. A row only continues
+      // the one above if that one is filled to its end. One blank cell there may be
+      // a space between words, or the cell a wide character didn't fit in; ConPTY
+      // pads a short row with spaces, so more than one is the end of a line.
+      let aboveIsFull = false;
+      let aboveSpaces = ""; // what the row above ends in, kept when its line goes on
       for (let i = 0; i < b.length; i++) {
         const line = b.getLine(i);
         if (!line) continue;
-        const text = line.translateToString(true).replace(/\s+$/, "");
-        if (line.isWrapped && out.length) out[out.length - 1] += text;
+        const whole = line.translateToString(false);
+        const text = whole.replace(/\s+$/, "");
+        if (line.isWrapped && aboveIsFull && out.length) out[out.length - 1] += aboveSpaces + text;
         else out.push(text);
+        aboveSpaces = whole.slice(text.length);
+        aboveIsFull = text !== "" && aboveSpaces.length <= 1;
       }
       while (out.length && !out[out.length - 1]) out.pop();
       return out.slice(-lines).join("\n");

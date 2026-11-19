@@ -203,6 +203,20 @@ test("readDialog finds the input box when the rule above it runs into it", async
   assert.equal(readDialog(`reply text\n${rule}`).kind, "unknown", "a rule with nothing under it is no input box");
 });
 
+test("readDialog separates options that an older host returns as one line", () => {
+  // The dialog from a session where the glasses showed one option, "Yes  2. No".
+  const glued = ` ⚠ Claude Code will automatically block this request in 0:29, to avoid holding up an unattended session
+ Do you want to proceed?
+ ❯ 1. Yes   2. No
+ Esc to cancel · Tab to amend`;
+  assert.deepEqual(readDialog(glued), { kind: "permission", options: ["Yes", "No"], prompt: "Do you want to proceed?" });
+  const three = ` Do you want to make this edit to notes.md?\n   1. Yes   2. Yes, allow all edits during this session (shift+tab) ❯ 3. No\n Esc to cancel`;
+  assert.deepEqual(readDialog(three).options, ["Yes", "Yes, allow all edits during this session (shift+tab)", "No"]);
+  // A number inside a label is not the start of another option.
+  const inside = ` Do you want to proceed?\n ❯ 1. Yes, run step  3. of the plan\n   2. No\n Esc to cancel`;
+  assert.deepEqual(readDialog(inside).options, ["Yes, run step  3. of the plan", "No"]);
+});
+
 test("transcript cleanup drops sound-effect captions and silence hallucinations", async () => {
   const { cleanTranscript } = await import("../hub/stt.mjs");
   assert.equal(cleanTranscript("*phone rings*"), "");

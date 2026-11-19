@@ -109,6 +109,37 @@ test("styledScreen reads the screen without resizing the session or staying atta
   }
 });
 
+test("screen joins a row to the one above only when that one really wrapped", { skip: !WIN && "Windows only" }, async () => {
+  const p = `${pipe}-wrap`;
+  const host = startHost({ pipe: p, exitWhenIdle: false });
+  await new Promise((r) => host.server.on("listening", r));
+  const c = new HostClient(p);
+  try {
+    // Claude Code's input box: a rule that fills the row, so the row under it is
+    // marked as wrapped. Then a dialog drawn over both by moving the cursor, as
+    // Claude Code redraws, which leaves the mark on what is now a row of its own.
+    const program = `
+      const w = (s) => process.stdout.write(s);
+      w("${"long ".repeat(30)}end\\n");
+      w("─".repeat(80) + "> box\\n" + "─".repeat(80) + "  status\\n");
+      setTimeout(() => {
+        w("\\x1b[4A\\r");
+        for (const l of ["> 1. Yes", "  2. No", "", "Esc to cancel"]) w(l + "\\x1b[K\\x1b[1B\\r");
+        w("drawn\\n");
+      }, 400);
+      setTimeout(() => {}, 20000);`;
+    const s = await c.request("new", { name: "wrap", cwd: process.cwd(), cmd: process.execPath, args: ["-e", program], cols: 80, rows: 24 });
+    const lines = (await screenHas(c, s.id, "drawn")).split("\n");
+    assert.equal(lines[0], `${"long ".repeat(30)}end`, "a line that wrapped is still read as one");
+    assert.deepEqual(lines.slice(1, 3), ["> 1. Yes", "  2. No"], "two rows of a redrawn dialog stay two lines");
+    assert.ok(lines.includes("Esc to cancel"));
+  } finally {
+    c.close();
+    for (const s of host.sessions.values()) s.kill();
+    host.close();
+  }
+});
+
 test("sendPrompt ends a prompt with Enter, or with Claude Code's send-now chord", { skip: !WIN && "Windows only" }, async () => {
   const { sendPrompt } = await import("../hub/pane.mjs");
   const p = `${pipe}-prompt`;

@@ -542,6 +542,16 @@ Smaller findings:
   dialog answered at the desk. It now puts the line break back before reading.
   The input box is also on screen during a turn, so the sweep takes "esc to
   interrupt" in the footer as the sign that the session is working, not idle.
+- The terminal's "wrapped" mark on a row can't be trusted on its own. It is set
+  when text runs over from the row above, and a redraw that moves the cursor to
+  the row and writes a short line of its own leaves it set. Claude Code redraws
+  that way, and its input box sets the mark twice a frame, under each full-width
+  rule. The host's screen read joined every marked row to the one above, so a
+  dialog drawn where the box had been came back as `❯ 1. Yes  2. No` and the
+  glasses showed one option. The read now joins a row only when the one above is
+  filled to its end, allowing one blank cell: ConPTY pads a short row with
+  spaces, so more than one is the end of a line. Because a running host keeps
+  its code, `readDialog` also splits numbered options that arrive on one line.
 
 - `cmd.exe` splits an unquoted argument at `&`. The sideload QR code lost the token
   that way, and the shell tried to run `token=...`. Commands that go through the

@@ -25,6 +25,13 @@ is kept at the end for reference.
   the glasses until the session's next hook. Both now clear as intended. When
   such a dialog is cleared, the session shows as working while the footer says
   a turn is running, and as idle otherwise.
+- A dialog's options could reach the glasses as one option, "Yes  2. No", with
+  nothing to choose between. The host read a row as the continuation of the one
+  above whenever the terminal had it marked as wrapped, and the mark stays on a
+  row after Claude Code redraws it with a line of its own. The host now joins a
+  row only to one that is filled to its end. A host that is already running
+  keeps the old code until its last session ends, so the hub also separates
+  numbered options that arrive on one line.
 
 ## 0.1.2
 

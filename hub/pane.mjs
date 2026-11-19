@@ -287,15 +287,20 @@ export async function acceptTrustIfShown(target, waitMs = 8000) {
     }
     if (dialog.kind === "trust") {
       // The trust dialog is an unnumbered two-item menu with "No, exit" focused.
-      // Arrow keys don't move it through ConPTY; the vi key does (see KEYS). A key
-      // sent while the dialog is still mounting is dropped, so move, check that
-      // "Yes" has the focus, and only then confirm.
-      for (let attempt = 0; attempt < 4; attempt++) {
+      // Which key moves it depends on the Claude Code version: the arrow key in
+      // 2.1.328, the vi key and not the arrow before (see KEYS). So try them in
+      // turn. The menu wraps, and a key sent while the dialog is still mounting is
+      // dropped, so press only while "Yes" lacks the focus, and confirm only once
+      // it has it.
+      const yesFocused = async () => /Yes, I trust/.test((await capture(target, 20)).split("\n").find((l) => /❯/.test(l)) || "");
+      const moves = ["Down", "MenuDown"];
+      for (let attempt = 0; attempt < 6; attempt++) {
         await sleep(attempt ? 400 : 600);
-        await sendKey(target, "MenuDown");
-        await sleep(400);
-        const focused = (await capture(target, 20)).split("\n").find((l) => /❯/.test(l)) || "";
-        if (/Yes, I trust/.test(focused)) {
+        if (!(await yesFocused())) {
+          await sendKey(target, moves[attempt % moves.length]);
+          await sleep(400);
+        }
+        if (await yesFocused()) {
           await sendKey(target, "Enter");
           return true;
         }

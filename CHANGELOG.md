@@ -12,6 +12,11 @@ is kept at the end for reference.
   hub submits it with Claude Code's send-now keys (Ctrl+X then Ctrl+S) in place of
   Enter, which stops the turn in progress and sends the prompt at once. It is a
   hub setting, so it works with any build of the glasses app.
+- A session started from the glasses in a folder Claude Code had not been told to
+  trust stayed at the trust dialog. Recent versions of Claude Code (seen in
+  2.1.328) move that dialog with the arrow key and no longer with `j`, the key
+  the hub pressed. The hub now tries both and confirms only once "Yes, I trust
+  this folder" has the focus.
 
 ## 0.1.2
 

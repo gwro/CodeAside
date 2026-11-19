@@ -29,9 +29,10 @@ export const KEYS = {
   // Application cursor mode (DECCKM) variants; the host picks by the terminal's mode.
   "Up:app": "\x1bOA",
   "Down:app": "\x1bOB",
-  // Claude Code's menus (the trust dialog, model picker) ignore arrow keys that
-  // arrive through a ConPTY input pipe, but take vi keys. Only for menus: in the
-  // prompt box these type letters.
+  // Claude Code's menus (the trust dialog, model picker) used to ignore arrow keys
+  // that arrive through a ConPTY input pipe and take vi keys. By 2.1.328 the trust
+  // dialog is the other way round, so its handler tries both. Only for menus: in
+  // the prompt box these type letters.
   MenuUp: "k",
   MenuDown: "j",
 };

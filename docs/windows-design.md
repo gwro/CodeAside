@@ -385,6 +385,9 @@ Things the implementation learned that the design above didn't predict:
   model picker) don't move. The vi keys `j`/`k` do. The host exposes them as
   `MenuDown`/`MenuUp`, and the trust handler checks that "Yes, I trust" has the
   focus before pressing Enter. Only menus use them; in the prompt box they'd type.
+  Later versions turned this round: in Claude Code 2.1.328 the trust dialog moves
+  on the arrow key and ignores `j`. The trust handler now tries the arrow and
+  then the vi key, looking at the focus before each press, since the menu wraps.
 - **A lone Escape is delayed.** conhost holds a bare ESC on the input pipe waiting
   for a sequence, about a second. Sent as a win32-input-mode key record
   (`ESC [ 27;1;27;1;0;1 _` down, then up) it is delivered at once, so `Escape` in

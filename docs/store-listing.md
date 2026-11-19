@@ -56,21 +56,35 @@ Visit the project at:
 **Review notes:**
 The app works without any setup through its built-in demo. Open the app, tap once
 on the glasses, and every screen is available with sample sessions: the session
-list, a working session, an approval (tap to approve), hold to talk, and the menu
-(tap then hold). Double-tap on the session list exits.
+list, a working session, an approval (tap to approve), hold to talk, a suggested
+prompt (tap twice to send), and the menu (tap then hold). Double-tap on the session
+list exits. The demo's sessions are all Claude Code, as the hub's are.
 
-The demo is upstream's and also lists Codex and Gemini sessions. This fork's hub
-runs Claude Code only.
+**Screenshots:** in `docs/screenshots`, 576×288, PNG with a transparent background.
+They are the fork's own app running its demo in Even's simulator, so they hold no
+real session:
 
-**Screenshots:** `docs/screenshots/01-home.png` to `05-menu.png` (576×288, PNG with a
-transparent background). They are upstream's and show its app; `06-agents.png` shows
-the choice between Claude Code, Codex and Gemini, which this fork doesn't offer, so
-leave it out. None of them shows what the fork's copy adds.
+| File | Shows |
+|---|---|
+| `01-sessions.png` | the session list: one needing approval, one working, two idle |
+| `02-approval.png` | an approval with its options |
+| `03-transcript.png` | a session's transcript with tool calls |
+| `04-voice.png` | hold to talk, with the words so far |
+| `05-suggestion.png` | a suggested prompt, after the first tap |
 
-Even Hub rejects solid black backgrounds, because the display is see-through: black
-is the part you look through, and the portal previews the screenshot over a blurred
-room photo. A capture from Even's simulator already has a transparent background.
-To rebuild one from a black-background capture, with ImageMagick:
+To retake them: `npm run build:app`, then
+`npx @evenrealities/evenhub-simulator --automation-port 9898 "http://127.0.0.1:7717/?demo"`
+and `curl.exe -o shot.png 127.0.0.1:9898/api/screenshot/glasses`.
+
+**Cover** (576×288, the size of a screenshot): `docs/screenshots/cover.png`, on a
+dark background, and `cover-transparent.png`, the same without one. The name
+and the tagline, in the display's green.
+
+Even Hub rejects solid black backgrounds for screenshots, because the display is
+see-through: black is the part you look through, and the portal previews the
+screenshot over a blurred room photo. A capture from Even's simulator already has a
+transparent background. To rebuild one from a black-background capture, with
+ImageMagick:
 
 ```sh
 magick shot.png -alpha off -separate -evaluate-sequence max \

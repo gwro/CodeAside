@@ -45,6 +45,9 @@ build in Even Hub ignores them.
   header counts the lines below the view (`↓13`).
 - `pair --dev` printed a sideload QR code without the token on Windows, because
   the shell cut the address at its `&`. The address is now quoted.
+- The app's built-in demo shows Claude Code sessions only, as the hub runs, and
+  one of them has a suggested prompt. The listing's screenshots are retaken from
+  it, and there is a cover image.
 - The phone screen of the fork's copy of the app links to this repository's setup
   guide and privacy policy, not upstream's.
 - Documentation: the README covers the fork's copy of the app, how to sideload it

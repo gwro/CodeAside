@@ -44,7 +44,9 @@ The hub works with Claude Code on your PC. What Claude Code sends to Anthropic i
 covered by your agreement with Anthropic, not by this policy.
 
 If you turn on the optional phone notifications (`ntfyTopic`), the hub sends the
-project name and a short status line to the ntfy server you configure.
+project name and up to 180 characters of text to the ntfy server you configure:
+the start of Claude's last reply when a session finishes, or what it is asking to
+do when it needs you. Anyone who knows the topic name can read them.
 
 ## Removing your data
 

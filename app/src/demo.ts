@@ -54,7 +54,7 @@ export class DemoHub extends Hub {
 
   constructor() {
     super({ url: "demo", token: "" });
-    this.agents = ["claude", "codex", "gemini"];
+    this.agents = ["claude"]; // this fork's hub runs Claude Code only, so its demo does too
   }
 
   override async connect() {
@@ -78,10 +78,15 @@ export class DemoHub extends Hub {
       waiting: { kind: "permission", tool: "Bash", detail: "Deploy the web build to staging" },
       lastActivity: now() - 60_000,
     });
-    const c = session({ id: "00000000-0000-4000-8000-000000000003", project: "docs-site", title: "Rewrite the install guide", lastActivity: now() - 40 * 60_000 });
-    const d = session({ id: "00000000-0000-4000-8000-000000000004", agent: "codex", project: "billing", model: "gpt-5.5", title: "Add invoice PDFs", lastActivity: now() - 12 * 60_000 });
-    const e = session({ id: "00000000-0000-4000-8000-000000000005", agent: "gemini", project: "landing-page", model: "gemini-3.5-flash", title: "Tighten the hero copy", lastActivity: now() - 25 * 60_000 });
-    for (const s of [a, b, c, d, e]) this.sessions.set(s.id, s);
+    const c = session({
+      id: "00000000-0000-4000-8000-000000000003",
+      project: "docs-site",
+      title: "Rewrite the install guide",
+      lastActivity: now() - 40 * 60_000,
+      suggestion: "commit the new install guide",
+    });
+    const d = session({ id: "00000000-0000-4000-8000-000000000004", project: "billing", model: "claude-sonnet-5", title: "Add invoice PDFs", lastActivity: now() - 12 * 60_000 });
+    for (const s of [a, b, c, d]) this.sessions.set(s.id, s);
     this.items.set(a.id, [
       item("user", "The signup test fails about one run in ten on CI. Find out why and fix it.", undefined, 300_000),
       item("assistant", "Looking at the signup flow and its test first.", undefined, 290_000),
@@ -98,14 +103,8 @@ export class DemoHub extends Hub {
       item("user", "Invoices need a PDF download. Add it next to the CSV export.", undefined, 20 * 60_000),
       item("tool", "invoices.ts", "Read", 19 * 60_000),
       item("tool", "invoices.ts, routes.ts", "Edit", 16 * 60_000),
-      item("tool", "npm test", "Shell", 14 * 60_000),
+      item("tool", "Run the tests", "Bash", 14 * 60_000),
       item("assistant", "Invoices now have a PDF download next to CSV. Tests pass.", undefined, 12 * 60_000),
-    ]);
-    this.items.set(e.id, [
-      item("user", "The hero headline wraps to three lines on phones. Make it fit on two.", undefined, 30 * 60_000),
-      item("tool", "Hero.tsx", "Read", 29 * 60_000),
-      item("tool", "Hero.tsx", "Edit", 27 * 60_000),
-      item("assistant", "The headline is shorter now and fits on two lines at 375px wide.", undefined, 25 * 60_000),
     ]);
     this.items.set(c.id, [
       item("user", "Rewrite the install guide so it starts with the one-line setup.", undefined, 50 * 60_000),
@@ -150,7 +149,7 @@ export class DemoHub extends Hub {
     s.activity = "Thinking";
     this.notify();
     later(() => {
-      this.add(id, item("assistant", "This is the demo, so nothing ran. Pair the app with your own machine to talk to real Claude Code, Codex and Gemini CLI sessions."));
+      this.add(id, item("assistant", "This is the demo, so nothing ran. Pair the app with your own PC to talk to real Claude Code sessions."));
       s.state = "idle";
       s.activity = "";
       s.lastActivity = now();
@@ -226,7 +225,7 @@ export class DemoHub extends Hub {
       projects: ["api-server", "mobile-app", "docs-site", "infra"].map((p, i) => ({ cwd: `~/code/${p}`, project: p, mtime: now() - i * 3_600_000 })),
       sessions: [
         { id: "00000000-0000-4000-8000-000000000010", cwd: "~/code/infra", project: "infra", title: "Rotate the staging certificates", mtime: now() - 26 * 3_600_000 },
-        { id: "00000000-0000-4000-8000-000000000011", agent: "codex", cwd: "~/code/api-server", project: "api-server", title: "Add rate limits to the public API", mtime: now() - 50 * 3_600_000 },
+        { id: "00000000-0000-4000-8000-000000000011", cwd: "~/code/api-server", project: "api-server", title: "Add rate limits to the public API", mtime: now() - 50 * 3_600_000 },
       ],
     };
   }

@@ -33,6 +33,8 @@ them from your G2, without taking the session over.
 - Start a Claude Code session in a recent project, or resume an earlier one.
 - Interrupt a session, compact it, or switch its model from the menu.
 - The screen dims while a session works and brightens when it is done or needs you.
+- Hide the screen while a session works: swipe down past the latest lines and only
+  a row of dots is left until it is done. Swipe up to bring the screen back.
 - See the next prompt Claude Code suggests, when it suggests one, and send it
   with two taps.
 - Keep working in the same session from your glasses and your PC at the same time.
@@ -104,8 +106,10 @@ readable against a light background, and the color is the display's green.
 
 **Icon** (24×24, one bit: every pixel fully on or fully off): a terminal window
 with a prompt, and a solid panel to its side. In `docs/screenshots`:
-`icon.png` is white on black, `icon-transparent.png` white on nothing, and
-`icon-black-on-white.png` the inverse. It is drawn in 2×2 pixel blocks, so it can
+`icon-transparent.png` is the one to upload: `#F4F4F4` at full opacity on fully
+transparent pixels, the only two values the portal accepts (pure white is
+refused). `icon.png` is white on black and `icon-black-on-white.png` the inverse,
+for showing it elsewhere. It is drawn in 2×2 pixel blocks, so it can
 also be redrawn in the portal's 24×24 editor from this 12×12 grid:
 
 ```text

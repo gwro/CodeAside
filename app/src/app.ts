@@ -237,6 +237,8 @@ export class App {
       return;
     }
     this.chunks = [];
+    // What is said is usually about the latest lines, so show those behind the dictation.
+    if (this.hub.prefs.latestOnTalk && this.top instanceof SessionScreen) this.top.toLatest();
     this.frozenFrame = this.top.frame();
     this.holdStartedAt = Date.now();
     this.voice = { phase: "recording", started: Date.now(), target, partial: "" };
@@ -529,6 +531,11 @@ class SessionScreen implements Screen {
   private viewOnlyHint() {
     const agent = agentOf(this.session);
     return agent === "codex" ? "View only: Codex isn't connected to the hub right now" : `View only: started outside glancecode. Start it with glancecode ${agent}`;
+  }
+
+  /** Show the latest lines, leaving wherever the view was scrolled or held. */
+  toLatest() {
+    this.view.toLatest();
   }
 
   /** Working or waiting: worth keeping the WebView awake for. */

@@ -51,6 +51,9 @@ const DEFAULTS = {
   // On the glasses, the text brightness while a session works, from 0 (dimmest) to
   // 4 (full, which means no dimming). Also read only by this fork's build of the app.
   workingBrightness: 4,
+  // On the glasses, jump to a session's latest lines when a hold to talk starts in it.
+  // Also read only by this fork's build of the app.
+  latestOnTalk: false,
 };
 
 /** Read the raw config file without generating tokens (used at import time). */

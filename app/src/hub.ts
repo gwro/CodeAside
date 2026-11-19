@@ -13,6 +13,8 @@ export interface Prefs {
   replyFromStart: boolean;
   /** Text brightness while a session works, 0 (dimmest) to 4 (full, so no dimming). */
   workingBrightness: number;
+  /** Jump to a session's latest lines when the user starts to talk to it. */
+  latestOnTalk: boolean;
 }
 
 interface HubState {
@@ -37,7 +39,7 @@ export class Hub {
   /** Agents the hub can start. Older hubs don't say, and only run Claude Code. */
   agents: Agent[] = ["claude"];
   /** Display preferences from the hub's config. Hubs that don't send them get the defaults. */
-  prefs: Prefs = { replyFromStart: false, workingBrightness: 4 };
+  prefs: Prefs = { replyFromStart: false, workingBrightness: 4, latestOnTalk: false };
   private modelCache = new Map<string, ModelChoice[]>();
   connected = false;
   lastError = "";

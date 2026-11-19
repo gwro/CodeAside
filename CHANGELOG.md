@@ -15,6 +15,11 @@ is kept at the end for reference.
   level while the session works and returns to full brightness when it finishes
   or needs you. It is 4 (no dimming) by default and also needs the fork's copy of
   the glasses app.
+- New `latestOnTalk` setting. When on, starting a hold to talk in a session that
+  is scrolled up or held at the start of a reply jumps to its latest lines first.
+  Off by default; it also needs the fork's copy of the glasses app.
+- A hub restart no longer loses a session that runs in the host when the process
+  id saved for it has exited; it used to reappear only at its next hook.
 - A scrolled transcript now stays on the same line while new lines arrive, and the
   header counts the lines below the view (`↓13`).
 - The hub has been paired and used with G2 glasses.

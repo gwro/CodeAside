@@ -116,9 +116,10 @@ export class Registry extends EventEmitter {
     }
     for (const s of saved.sessions || []) {
       if (!s.id || !s.transcriptPath) continue;
-      // Restore sessions whose process still runs; a pane without a known pid is
-      // restored too and the first sweep asks the host whether it is still there.
-      if (s.pid ? !pidAlive(s.pid) : !s.pane) continue;
+      // Restore a session in a pane, and the first sweep asks the host whether it is
+      // still there; its saved pid says nothing, since it can be a process that has
+      // since exited. Without a pane, restore it if its process still runs.
+      if (!s.pane && !(s.pid && pidAlive(s.pid))) continue;
       const session = new Session(s);
       Object.assign(session, { pane: s.pane || null, pid: s.pid || null, origin: s.origin || "terminal", paneName: s.paneName || null });
       session.state = "idle"; // waiting details are not persisted; the next hook or sweep corrects it

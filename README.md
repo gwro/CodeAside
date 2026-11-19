@@ -11,8 +11,8 @@ on your own PC and your own Tailscale network.
 GlanceCode is an independent project by [sousy](https://github.com/sousyllc). This
 fork adapts its hub and command-line tool to Windows. The glasses app in Even Hub is
 upstream's and pairs with this hub as it would with the original; the fork's own
-copy of the app adds two optional settings, `replyFromStart` and
-`workingBrightness` (see [Configuration](#configuration)). Neither project is affiliated with Anthropic, Even
+copy of the app adds three optional settings, `replyFromStart`,
+`workingBrightness` and `latestOnTalk` (see [Configuration](#configuration)). Neither project is affiliated with Anthropic, Even
 Realities or Microsoft.
 
 ## About this fork
@@ -205,6 +205,7 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `preventSleep` | true | keep the PC awake (not the display) while the hub runs and the PC is on AC power |
 | `replyFromStart` | false | on the glasses, hold a reply too long for the screen at its first line, so you read it from the start; swipe down to read on, tap for the latest. Off, a session always shows its latest lines. Needs this fork's copy of the glasses app, sideloaded with `glancecode pair --dev`; the Even Hub build ignores it |
 | `workingBrightness` | 4 | on the glasses, the text brightness of a session's screen while it is working, from 0 (dimmest) to 4 (full, so nothing dims). Below 4, the screen dims while Claude works and returns to full when it finishes or needs you; text you have scrolled to, a held reply, and what you dictate stay at full. Needs this fork's copy of the glasses app, as `replyFromStart` does |
+| `latestOnTalk` | false | on the glasses, when you hold to talk in a session that is scrolled up or held at the start of a reply, jump to its latest lines before listening. Needs this fork's copy of the glasses app, as `replyFromStart` does |
 | `bindTailscaleIP` | false | also listen on the raw Tailscale IP over plain HTTP, for development |
 
 Restart the hub after changing the file: `glancecode service restart`.

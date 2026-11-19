@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { startHost } from "../host/host.mjs";
-import { HostClient, KEYS, attach, resolveClaude } from "../host/client.mjs";
+import { HostClient, KEYS, attach, resolveClaude, styledScreen } from "../host/client.mjs";
 
 const WIN = process.platform === "win32";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -78,6 +78,30 @@ test("attach paints the current screen and relays input", { skip: !WIN && "Windo
     const result = await done;
     assert.equal(result.reason, "detached");
     assert.equal((await c.request("alive", { session: s.id })).alive, true, "detaching leaves the session running");
+  } finally {
+    c.close();
+    for (const s of host.sessions.values()) s.kill();
+    host.close();
+  }
+});
+
+test("styledScreen reads the screen without resizing the session or staying attached", { skip: !WIN && "Windows only" }, async () => {
+  const p = `${pipe}-styled`;
+  const host = startHost({ pipe: p, exitWhenIdle: false });
+  await new Promise((r) => host.server.on("listening", r));
+  const c = new HostClient(p);
+  try {
+    const s = await c.request("new", { name: "a", cwd: process.cwd(), cmd: process.env.ComSpec, args: ["/d", "/q", "/k"], cols: 80, rows: 24 });
+    await c.request("write", { session: s.id, data: "echo read with styling\r" });
+    await screenHas(c, s.id, "\nread with styling");
+    const styled = await styledScreen(p, s.id);
+    assert.match(styled, /read with styling/);
+    assert.ok(styled.includes("\x1b["), "the screen comes with its terminal codes");
+    assert.equal(host.sessions.get(s.id).cols, 80, "the session keeps its size");
+    await sleep(100);
+    assert.equal(host.sessions.get(s.id).attached.size, 0, "nothing stays attached");
+    assert.equal(await styledScreen(p, "no-such-session"), "");
+    assert.equal(await styledScreen(`${p}-nobody-home`, s.id), "");
   } finally {
     c.close();
     for (const s of host.sessions.values()) s.kill();

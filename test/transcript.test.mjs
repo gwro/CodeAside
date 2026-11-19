@@ -4,7 +4,7 @@ import { appendFileSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { entryMeta, entryToItems, toolLabel, TranscriptTail } from "../hub/transcript.mjs";
-import { readDialog } from "../hub/pane.mjs";
+import { readDialog, suggestionIn } from "../hub/pane.mjs";
 
 test("user prompt becomes a user item; injected context is dropped", () => {
   assert.deepEqual(entryToItems({ type: "user", uuid: "u1", message: { content: "fix the build" } }).map((i) => i.kind), ["user"]);
@@ -72,6 +72,29 @@ test("tool labels", () => {
   assert.equal(toolLabel("mcp__github__create_issue", {}), "create_issue");
   // PowerShell is the shell on Windows: labelled as Bash is, command when there is no description.
   assert.equal(toolLabel("PowerShell", { command: "git status" }), "git status");
+});
+
+test("a suggested prompt is dim text alone in the input box", () => {
+  const rule = `\x1b[38;2;136;136;136m${"─".repeat(270)}\x1b[0m`;
+  const status = `  \x1b[38;2;255;193;7m⏵⏵ auto mode on\x1b[38;2;153;153;153m (shift+tab to cycle)\x1b[2A\x1b[21D\x1b[0m\x1b[?2004h\x1b[?1004h`;
+  const screen = (input) => `\x1b[0m● Done.\r\n\r\n✻ Baked for 15s\r\n\r\n${rule}❯${input}\r\n${rule}${status}`;
+
+  // As captured from Claude Code: the suggestion in dim after the prompt mark.
+  assert.equal(suggestionIn(screen(" \x1b[2mcommit the latestOnPrompt setting\x1b[0m")), "commit the latestOnPrompt setting");
+  // Spaces can arrive as cursor moves, and a long one continues on the next row.
+  assert.equal(suggestionIn(screen(" \x1b[2mrun\x1b[1Cthe tests\x1b[0m\r\n  \x1b[2mand push\x1b[0m")), "run the tests and push");
+  // Nothing in the box, text the user typed, and a new session's example are not suggestions.
+  assert.equal(suggestionIn(screen(" ")), null);
+  assert.equal(suggestionIn(screen(" commit\x1b[1Cand\x1b[1Cpush")), null);
+  assert.equal(suggestionIn(screen(" fix \x1b[2mthe build\x1b[0m")), null);
+  assert.equal(suggestionIn(screen(' \x1b[2mTry "edit <filepath> to..."\x1b[0m')), null);
+  // A grey colour is not dim: its "2" is part of the colour.
+  assert.equal(suggestionIn(screen(" \x1b[38;2;153;153;153mnot dim\x1b[0m")), null);
+  // Live output after the painted screen is not read.
+  assert.equal(suggestionIn(`${screen(" ")}\x1b[?2026h${rule}❯ \x1b[2mstale\x1b[0m`), null);
+  // No input box on screen, and no screen at all.
+  assert.equal(suggestionIn("● Working…\r\n  ⎿ running"), null);
+  assert.equal(suggestionIn(""), null);
 });
 
 test("a tool label is cut to about a line, and kept long for a reader that fits it itself", () => {

@@ -18,6 +18,10 @@ export interface Prefs {
   latestOnTalk: boolean;
   /** Lines a tool call's description may take before it is cut. */
   toolLines: number;
+  /** Jump to a session's latest lines when a prompt is sent or a dialog answered, at the desk too. */
+  latestOnPrompt: boolean;
+  /** Show the prompt Claude Code suggests next, when the hub reports one. */
+  showSuggestions: boolean;
 }
 
 interface HubState {
@@ -42,7 +46,7 @@ export class Hub {
   /** Agents the hub can start. Older hubs don't say, and only run Claude Code. */
   agents: Agent[] = ["claude"];
   /** Display preferences from the hub's config. These are its defaults, for a hub that sends none. */
-  prefs: Prefs = { replyFromStart: true, workingBrightness: 0, latestOnTalk: true, toolLines: TOOL_LINES };
+  prefs: Prefs = { replyFromStart: true, workingBrightness: 0, latestOnTalk: true, toolLines: TOOL_LINES, latestOnPrompt: true, showSuggestions: true };
   private modelCache = new Map<string, ModelChoice[]>();
   connected = false;
   lastError = "";

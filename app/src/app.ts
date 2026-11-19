@@ -6,7 +6,7 @@ import { GLYPH, ago, layoutItems, shortModel, stateLabel } from "./format.ts";
 import { TranscriptView } from "./scroll.ts";
 import type { Hub } from "./hub.ts";
 import type { Action } from "./input.ts";
-import { padTo, spread, truncate, width, wrap } from "./text.ts";
+import { capLines, padTo, spread, truncate, width, wrap } from "./text.ts";
 import type { Agent, ModelChoice, RecentProject, SessionSummary } from "./types.ts";
 
 declare const __APP_VERSION__: string;
@@ -14,6 +14,8 @@ const APP_VERSION = typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "dev
 
 const CURSOR = "▶ ";
 const NO_CURSOR = padTo("", width(CURSOR)); // spaces measured to the cursor's pixel width
+const SUGGESTION = "→ ";
+const NO_SUGGESTION = padTo("", width(SUGGESTION));
 
 interface Screen {
   frame(): Frame;
@@ -505,6 +507,7 @@ const SCROLL_STEP = 3;
 class SessionScreen implements Screen {
   private view = new TranscriptView();
   private following = true; // the latest lines are on screen, as of the last frame
+  private wasWaiting = false; // a dialog was open, as of the last frame
   private cursor = 0;
   private dialogOptions: string[] | null = null;
   private dialogFor = "";
@@ -599,6 +602,12 @@ class SessionScreen implements Screen {
     return lines;
   }
 
+  /** The prompt Claude Code suggests next, shown while the session waits for one. */
+  private suggestionLines(s: SessionSummary): string[] {
+    if (!this.app.hub.prefs.showSuggestions || !s.suggestion || s.state !== "idle") return [];
+    return ["", ...capLines(wrap(s.suggestion, BODY_INNER_W, SUGGESTION, NO_SUGGESTION), 2, BODY_INNER_W)];
+  }
+
   frame(): Frame {
     const s = this.session;
     const menu = sessionMenu(this.models);
@@ -607,11 +616,16 @@ class SessionScreen implements Screen {
     if (!items) this.app.hub.ensureItems(this.id); // self-heal if the cache was dropped
     const layout = items?.length ? layoutItems(items, BODY_INNER_W, this.app.hub.prefs.toolLines) : null;
     const transcript = !items ? ["Loading…"] : layout ? layout.lines : s.controllable ? ["Nothing here yet. Hold to talk."] : [];
+    const prefs = this.app.hub.prefs;
+    // A dialog that has closed was answered, here or at the desk: the session moves on.
+    if (prefs.latestOnPrompt && this.wasWaiting && !s.waiting) this.view.toLatest();
+    this.wasWaiting = !!s.waiting;
     // A dialog outranks the start of a long reply: it shows with the latest lines.
-    const holdReplies = this.app.hub.prefs.replyFromStart && !s.waiting;
-    const top = items && layout ? this.view.place(items, layout, BODY_LINES, holdReplies) : null;
+    const holdReplies = prefs.replyFromStart && !s.waiting;
+    const top = items && layout ? this.view.place(items, layout, BODY_LINES, holdReplies, prefs.latestOnPrompt) : null;
     const following = (this.following = top === null);
-    const waitBlock = following ? this.waitingLines(s) : [];
+    // Under the latest lines: the dialog to answer, or failing that a suggested prompt.
+    const waitBlock = !following ? [] : s.waiting ? this.waitingLines(s) : this.suggestionLines(s);
     const room = BODY_LINES - Math.min(waitBlock.length, BODY_LINES - 2);
     const start = top ?? Math.max(0, transcript.length - room);
     const body = [...transcript.slice(start, start + room), ...waitBlock].slice(-BODY_LINES);

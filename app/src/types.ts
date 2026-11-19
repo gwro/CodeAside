@@ -32,6 +32,8 @@ export interface SessionSummary {
   lastActivity: number;
   backgroundTasks: number;
   itemCount: number;
+  /** The next prompt Claude Code suggests in its input box, while it shows one. */
+  suggestion?: string | null;
 }
 
 export interface Item {

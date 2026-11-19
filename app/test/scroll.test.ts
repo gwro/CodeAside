@@ -91,6 +91,36 @@ test("scrolling stays on the same line while the transcript changes around it", 
   assert.equal(place(view, items), layoutItems(items, W).starts[1] + 3);
 });
 
+test("a new prompt, typed anywhere, brings a scrolled view back to the latest lines", () => {
+  const items = [user("u1"), reply("a1", 20)];
+  const view = open(items);
+  view.scroll(-3);
+  assert.equal(view.place(items, layoutItems(items, W), PAGE, true, true), 21 - PAGE - 3);
+  items.push(user("u2", "typed at the desk"));
+  assert.equal(view.place(items, layoutItems(items, W), PAGE, true, true), null);
+  // A reply to it is new, so a long one is held as usual.
+  items.push(reply("a2", 20));
+  assert.equal(view.place(items, layoutItems(items, W), PAGE, true, true), 23);
+});
+
+test("a prompt that arrives together with its long reply leaves the view at the reply's start", () => {
+  const items = [user("u1"), reply("a1", 20)];
+  const view = open(items);
+  view.scroll(-3);
+  view.place(items, layoutItems(items, W), PAGE, true, true);
+  items.push(user("u2"), reply("a2", 20));
+  assert.equal(view.place(items, layoutItems(items, W), PAGE, true, true), 23);
+});
+
+test("without following prompts, a scrolled view stays put when one arrives", () => {
+  const items = [user("u1"), reply("a1", 20)];
+  const view = open(items);
+  view.scroll(-3);
+  place(view, items);
+  items.push(user("u2"));
+  assert.equal(place(view, items), 21 - PAGE - 3);
+});
+
 test("a scroll lands on the right line when the list was trimmed in place since the last frame", () => {
   const view = new TranscriptView();
   const items = [user("u0", "earlier"), reply("a0", 2), user("u1"), reply("a1", 20)];

@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "
 import { basename, join } from "node:path";
 import { CLAUDE_PROJECTS_DIR, STATE_FILE } from "./config.mjs";
 import { entryMeta, entryToItems, parseLine, readTailLines, toolLabel, TranscriptTail } from "./transcript.mjs";
-import { capture, paneAlive, paneKey, readDialog, targetFromHook } from "./pane.mjs";
+import { capture, paneAlive, paneKey, readDialog, readSuggestion, targetFromHook } from "./pane.mjs";
 
 const MAX_ITEMS = 300;
 const HISTORY_ITEMS = 150; // how much history to load when the hub starts watching a session
@@ -37,6 +37,8 @@ export class Session {
     /** @type {State} */
     this.state = "starting";
     this.activity = ""; // "Edit foo.ts"
+    /** The prompt Claude Code suggests in its input box while the session is idle, if any. */
+    this.suggestion = null;
     /** @type {null | {kind: "permission"|"question", tool?: string, detail?: string, questions?: any[], questionIndex?: number}} */
     this.waiting = null;
     this.model = null;
@@ -78,6 +80,7 @@ export class Session {
       lastActivity: this.lastActivity,
       backgroundTasks: this.backgroundTasks,
       itemCount: this.items.length,
+      suggestion: this.suggestion,
     };
   }
 
@@ -102,6 +105,8 @@ export class Registry extends EventEmitter {
     /** @type {Map<string, Session>} */
     this.sessions = new Map();
     this.saveTimer = null;
+    /** Look for a suggested prompt in idle sessions' input boxes on each sweep. */
+    this.readSuggestions = true;
   }
 
   // ---------- persistence ----------
@@ -272,6 +277,7 @@ export class Registry extends EventEmitter {
         session.state = "working";
         session.activity = "";
         session.waiting = null;
+        session.suggestion = null;
         break;
       case "PreToolUse":
         session.state = "working";
@@ -390,6 +396,13 @@ export class Registry extends EventEmitter {
           }
         } catch {
           /* pane busy or gone */
+        }
+        // Claude Code sometimes suggests the next prompt in its input box, a while
+        // after the turn ends. It is nowhere but on the screen.
+        const suggestion = this.readSuggestions && s.state === "idle" && !s.waiting ? await readSuggestion(s.pane).catch(() => null) : null;
+        if (suggestion !== s.suggestion) {
+          s.suggestion = suggestion;
+          this.changed(s);
         }
       }
       if (!alive) {

@@ -3,7 +3,7 @@
 import { basename } from "node:path";
 import { join } from "node:path";
 import { DATA_DIR, HOST_PIPE } from "./config.mjs";
-import { HostClient, defaultPipe, ensureHost, resolveClaude } from "../host/client.mjs";
+import { HostClient, defaultPipe, ensureHost, resolveClaude, styledScreen } from "../host/client.mjs";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const HOST_LOG = join(DATA_DIR, "logs", "host.log");
@@ -87,6 +87,50 @@ export function readDialog(screen) {
   if (!complete && options.length) return { kind: "unknown", options: [] };
   if (/^\s*❯\s*/m.test(tail.slice(-4).join("\n"))) return { kind: "input", options: [] };
   return { kind: "unknown", options: clean };
+}
+
+/** Whether text is dim after an SGR sequence with these parameters. */
+function dimAfter(params, dim) {
+  const p = params.split(";");
+  for (let i = 0; i < p.length; i++) {
+    if (p[i] === "" || p[i] === "0" || p[i] === "22") dim = false;
+    else if (p[i] === "2") dim = true;
+    else if (p[i] === "38" || p[i] === "48") i += p[i + 1] === "2" ? 4 : p[i + 1] === "5" ? 2 : 0; // a colour's own numbers
+  }
+  return dim;
+}
+
+/**
+ * The prompt Claude Code suggests, read from a styled screen (see styledScreen):
+ * dim text alone in the input box. Text the user typed isn't dim, so a box with
+ * any of it holds no suggestion.
+ */
+export function suggestionIn(styled) {
+  // What an attaching client is sent ends with terminal modes and then live output.
+  const cells = String(styled || "").split("\x1b[?")[0];
+  // The box sits under a full-width rule, and the two arrive as one wrapped row.
+  const boxes = [...cells.matchAll(/─{20,}(?:\x1b\[[0-9;]*m)*❯([\s\S]*?)(?=(?:\x1b\[[0-9;]*m)*─{20,}|$)/g)];
+  const input = boxes.at(-1)?.[1];
+  if (!input) return null;
+  let dim = false;
+  let text = "";
+  for (const m of input.matchAll(/\x1b\[([0-9;]*)([A-Za-z])|([^\x1b])/g)) {
+    if (m[3] !== undefined) {
+      if (/\s/.test(m[3])) text += " ";
+      else if (dim) text += m[3];
+      else return null; // typed text
+    } else if (m[2] === "m") dim = dimAfter(m[1], dim);
+    else if (m[2] === "C") text += " ".repeat(Number(m[1]) || 1); // cursor forward stands in for spaces
+  }
+  text = text.replace(/\s+/g, " ").trim();
+  // A new session's box holds an example prompt in the same style.
+  if (!text || /^Try "/.test(text)) return null;
+  return text;
+}
+
+/** The prompt Claude Code is suggesting in this pane right now, or null. */
+export async function readSuggestion(target) {
+  return suggestionIn(await styledScreen(target.host, target.pane));
 }
 
 /**

@@ -202,6 +202,45 @@ export class HostClient {
   }
 }
 
+/**
+ * A session's screen with its styling: what the host paints for a client that
+ * attaches, as text with SGR codes. The connection is dropped once the screen
+ * has arrived. No size is sent, so the host keeps the session's own and nothing
+ * is resized. Resolves to "" when the host or the session isn't there.
+ */
+export function styledScreen(pipe, session, { timeout = 1500, quiet = 60 } = {}) {
+  return new Promise((done) => {
+    const s = netConnect(pipe);
+    let buf = Buffer.alloc(0);
+    let quietTimer = null;
+    const finish = () => {
+      clearTimeout(quietTimer);
+      clearTimeout(limit);
+      s.destroy();
+      const text = buf.toString("utf8");
+      const nl = text.indexOf("\n"); // the JSON reply to the attach comes first, on its own line
+      let ok = false;
+      try {
+        ok = nl >= 0 && JSON.parse(text.slice(0, nl)).ok === true;
+      } catch {
+        /* not a reply */
+      }
+      done(ok ? text.slice(nl + 1) : "");
+    };
+    const limit = setTimeout(finish, timeout);
+    limit.unref?.();
+    s.once("connect", () => s.write(JSON.stringify({ id: 1, op: "attach", session }) + "\n"));
+    s.on("data", (chunk) => {
+      buf = Buffer.concat([buf, chunk]);
+      // The screen comes in one burst; what follows after a pause is live output.
+      clearTimeout(quietTimer);
+      quietTimer = setTimeout(finish, quiet);
+    });
+    s.once("error", finish);
+    s.once("close", finish);
+  });
+}
+
 // ConPTY asks the terminal for win32-input-mode at startup, and the relay passes
 // that on, so Windows Terminal sends keys as `ESC [ Vk ; Sc ; Uc ; Kd ; Cs ; Rc _`
 // records. Claude Code needs that fidelity (arrow keys, for one), so the records

@@ -33,6 +33,8 @@ export class TranscriptView {
   /** The reply the user has moved on from. */
   private readKey = "";
   private opened = false;
+  /** The newest prompt seen, to notice the next one. */
+  private promptKey = "";
   // As of the last place(). The keys are a copy: the hub trims its list in place.
   private keys: string[] = [];
   private starts: number[] = [];
@@ -43,17 +45,25 @@ export class TranscriptView {
   /**
    * The first line to show on a screen of `page` lines, or null for the latest
    * lines. `holdReplies` says whether a long reply may hold the view right now.
+   * With `followPrompts`, a new prompt in the session, from the glasses or typed
+   * at the desk, ends any scrolling: the conversation has moved on.
    */
-  place(items: Item[], layout: Layout, page: number, holdReplies: boolean): number | null {
+  place(items: Item[], layout: Layout, page: number, holdReplies: boolean, followPrompts = false): number | null {
     const maxTop = Math.max(0, layout.lines.length - page);
     const reply = latestReply(items);
     const replyKey = reply >= 0 ? items[reply].key : "";
+    let promptKey = "";
+    for (let i = items.length - 1; i >= 0 && !promptKey; i--) if (items[i].kind === "user") promptKey = items[i].key;
     if (!this.opened) {
       // A session opens on its latest lines: only a reply that arrives while it
       // is open is held at its start.
       this.opened = true;
       this.readKey = replyKey;
+    } else if (followPrompts && promptKey && promptKey !== this.promptKey) {
+      // Only the scrolling goes: a long reply that came with the prompt is still held.
+      this.scrolledTo = null;
     }
+    this.promptKey = promptKey;
     const at = this.scrolledTo ? items.findIndex((it) => it.key === this.scrolledTo!.key) : -1;
     let top: number | null = null;
     if (this.scrolledTo && at >= 0) {

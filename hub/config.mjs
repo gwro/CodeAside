@@ -57,6 +57,12 @@ const DEFAULTS = {
   // Lines a tool call's description may take, 1 to 6. It is cut where the display
   // runs out, measured in pixels.
   toolLines: 2,
+  // Jump to a session's latest lines when a prompt is sent to it or a dialog in it
+  // is answered, whether from the glasses or at the desk.
+  latestOnPrompt: true,
+  // Show the next prompt Claude Code suggests in its input box, when it suggests
+  // one, under an idle session's latest lines. The hub reads it off the screen.
+  showSuggestions: true,
 };
 
 /** Read the raw config file without generating tokens (used at import time). */

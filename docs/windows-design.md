@@ -520,6 +520,16 @@ when the process id saved for it had exited, and came back, as "starting", only 
 its next hook. A pane session is now restored whatever that id says, and the first
 sweep asks the host, as the sweep itself already did.
 
+**Sending over a turn in progress** (`sendNowWhenWorking`). Enter in Claude Code's
+input box queues a prompt while a turn runs, and the prompt is only read when the
+turn ends. Claude Code has a second way to submit, `chat:sendNow`, bound to Ctrl+X
+then Ctrl+S: it stops the turn and sends what is in the box. For a session the hub
+has as working, the hub ends the prompt with those two bytes (`0x18 0x13`) in
+place of Enter, and ConPTY delivers them as the key presses. On an idle session
+the chord submits as Enter does, so a state that is a moment out of date costs
+nothing. They go through the host's `write`, not its key table, so a host that is
+already running needs no new code.
+
 Smaller findings:
 
 - `cmd.exe` splits an unquoted argument at `&`. The sideload QR code lost the token

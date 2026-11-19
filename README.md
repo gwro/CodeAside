@@ -240,7 +240,9 @@ being published:
 | Tap then hold | menu | interrupt, jump to latest, switch model, compact |
 
 After a hold, the transcript of what you said waits on screen: tap sends it, hold
-records again, double-tap discards it.
+records again, double-tap discards it. Sent to a session that is working, it
+stops the turn in progress and is taken at once; set `sendNowWhenWorking` to
+`false` to have it wait for the turn to end instead.
 
 In a session's transcript, `»` marks your prompts and `▷` a tool call; calls to the
 same tool in a row collapse into one line (`Read ×3`), and only the last three
@@ -315,6 +317,7 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `ntfyTopic` | empty | optional phone push through ntfy when a session finishes or needs you |
 | `preventSleep` | true | keep the PC awake (not the display) while the hub runs and the PC is on AC power |
 | `bindTailscaleIP` | false | also listen on the raw Tailscale IP over plain HTTP, for development |
+| `sendNowWhenWorking` | true | send a prompt from the glasses at once when its session is working. Claude Code stops the turn in progress and takes the prompt, as it does when you press its send-now keys, Ctrl+X then Ctrl+S; the hub presses those in place of Enter. With `false`, the prompt waits in Claude Code's queue until the turn ends. Set it to `false` if you have bound those keys to something else in Claude Code's `keybindings.json` |
 | `replyFromStart` | true | on the glasses, hold a reply that arrives while a session is open, and is too long for the screen, at its first line, so you read it from the start; swipe down to read on, tap for the latest. A session you open always starts on its latest lines. With `false`, a session always shows its latest lines, as upstream's app does |
 | `workingBrightness` | 0 | on the glasses, the text brightness of a session's screen while it is working, from 0 (dimmest) to 4 (full). Below 4, the screen dims while Claude works and returns to full when it finishes or needs you; text you have scrolled to, a held reply, and what you dictate stay at full. With `4`, nothing dims, as in upstream's app |
 | `latestOnTalk` | true | on the glasses, when you hold to talk in a session that is scrolled up or held at the start of a reply, jump to its latest lines before listening. With `false`, the view stays where it was, as in upstream's app |

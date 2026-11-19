@@ -109,6 +109,32 @@ test("styledScreen reads the screen without resizing the session or staying atta
   }
 });
 
+test("sendPrompt ends a prompt with Enter, or with Claude Code's send-now chord", { skip: !WIN && "Windows only" }, async () => {
+  const { sendPrompt } = await import("../hub/pane.mjs");
+  const p = `${pipe}-prompt`;
+  const host = startHost({ pipe: p, exitWhenIdle: false });
+  await new Promise((r) => host.server.on("listening", r));
+  const c = new HostClient(p);
+  try {
+    // A console program that prints the bytes it is sent, as Claude Code would read them.
+    const echo = 'process.stdin.setRawMode(true); console.log("ready"); process.stdin.on("data", (d) => console.log([...d].map((b) => b.toString(16).padStart(2, "0")).join(" ")));';
+    const s = await c.request("new", { name: "keys", cwd: process.cwd(), cmd: process.execPath, args: ["-e", echo], cols: 80, rows: 24 });
+    const target = { host: p, pane: s.id };
+    const sent = async () => (await c.request("screen", { session: s.id, lines: 50 })).text.replace(/ready/, "").replace(/\s+/g, " ").trim();
+    await screenHas(c, s.id, "ready");
+    await sendPrompt(target, "hi\nthere");
+    await screenHas(c, s.id, "0d");
+    assert.equal(await sent(), "68 69 20 74 68 65 72 65 0d", "one line, then Enter");
+    await sendPrompt(target, "now", { now: true });
+    await screenHas(c, s.id, "13");
+    assert.equal(await sent(), "68 69 20 74 68 65 72 65 0d 6e 6f 77 18 13", "Ctrl+X Ctrl+S in place of Enter");
+  } finally {
+    c.close();
+    for (const s of host.sessions.values()) s.kill();
+    host.close();
+  }
+});
+
 test("the detach chord is recognised in every encoding a Windows terminal uses", async () => {
   const { isDetachChord } = await import("../host/client.mjs");
   assert.equal(isDetachChord(Buffer.from([0x1d])), true, "plain byte");

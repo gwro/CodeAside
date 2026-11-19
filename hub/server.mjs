@@ -285,12 +285,14 @@ export function startHub({ quiet = false, feed = true } = {}) {
         const { text } = await readJSON(req);
         if (!text || typeof text !== "string") throw new HttpError(400, "text required");
         await refuseIfDialog(s);
-        await paneCtl.sendPrompt(controllable(s), text);
+        // Claude Code queues a prompt typed during a turn until the turn ends.
+        const now = cfg.sendNowWhenWorking === true && s.state === "working";
+        await paneCtl.sendPrompt(controllable(s), text, { now });
         if (!(await confirmDelivered(s, text))) {
           log(`✗ ${s.project}: typed but not seen in the terminal or transcript: ${text.slice(0, 80)}`);
           throw new HttpError(502, "Typed it, but Claude didn't show it. Is that terminal in another mode?");
         }
-        log(`→ ${s.project}: ${text}`);
+        log(`→ ${s.project}: ${text}${now ? " (sent now, over the turn in progress)" : ""}`);
         return send(res, 200, { ok: true });
       }
       if (method === "POST" && action === "interrupt") {

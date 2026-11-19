@@ -150,13 +150,24 @@ export async function readDialogStable(target, { lines = 40, attempts = 6, gapMs
   return last;
 }
 
-/** Type a prompt into Claude Code's input box and submit it. */
-export async function sendPrompt(target, text) {
+// Ctrl+X Ctrl+S, Claude Code's default chord for "send now" (chat:sendNow in its
+// keybindings). Written as bytes rather than added to the host's key table: a host
+// that is already running holds live sessions and keeps the table it started with.
+const SEND_NOW = "\x18\x13";
+
+/**
+ * Type a prompt into Claude Code's input box and submit it. Enter queues a prompt
+ * behind a turn in progress; with `now`, the send-now chord submits it instead,
+ * which cuts that turn short and sends the prompt at once. On an idle session the
+ * chord submits as Enter does.
+ */
+export async function sendPrompt(target, text, { now = false } = {}) {
   const flat = String(text).replace(/\r?\n+/g, " ").trim();
   if (!flat) return;
   await host(target, "write", { data: flat });
   await sleep(120); // let the TUI absorb a paste-sized burst before submitting
-  await host(target, "key", { key: "Enter" });
+  if (now) await host(target, "write", { data: SEND_NOW });
+  else await host(target, "key", { key: "Enter" });
 }
 
 const KEY_WHITELIST = new Set(["Escape", "Enter", "Up", "Down", "MenuUp", "MenuDown", "Tab", "BTab", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);

@@ -5,6 +5,14 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
+## Unreleased
+
+- `sendNowWhenWorking`, on by default. A prompt sent from the glasses to a session
+  that is working no longer waits in Claude Code's queue for the turn to end: the
+  hub submits it with Claude Code's send-now keys (Ctrl+X then Ctrl+S) in place of
+  Enter, which stops the turn in progress and sends the prompt at once. It is a
+  hub setting, so it works with any build of the glasses app.
+
 ## 0.1.2
 
 - A message sent with a pasted image while Claude was busy showed on the glasses

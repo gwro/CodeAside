@@ -45,6 +45,9 @@ const DEFAULTS = {
   claudeArgs: [],
   // Keep the machine awake while the hub runs, so the glasses can reach it. Later milestone.
   preventSleep: true,
+  // Send a prompt from the glasses at once when its session is working, cutting the
+  // turn in progress short, instead of leaving it queued until that turn ends.
+  sendNowWhenWorking: true,
   // The rest are for the glasses display, and only this fork's build of the glasses
   // app reads them; upstream's build in Even Hub behaves as it always has.
   // Hold a reply too long for the screen at its first line instead of showing its end.

@@ -34,7 +34,8 @@ them from your G2, without taking the session over.
 - Interrupt a session, compact it, or switch its model from the menu.
 - The screen dims while a session works and brightens when it is done or needs you.
 - Hide the screen while a session works: swipe down past the latest lines and only
-  a row of dots is left until it is done. Swipe up to bring the screen back.
+  a row of dots is left until it is done or needs you. Swipe up on the dots to
+  stop hiding it.
 - See the next prompt Claude Code suggests, when it suggests one, and send it
   with two taps.
 - Keep working in the same session from your glasses and your PC at the same time.

@@ -70,7 +70,8 @@ const DEFAULTS = {
   // confirms it.
   sendSuggestionOnTap: true,
   // Curtain mode: a swipe down past the latest lines of a working session hides
-  // its screen, leaving only moving dots while it works, until a swipe up.
+  // its screen behind moving dots whenever it works, until a swipe up. The screen
+  // is back each time the session finishes or asks something.
   curtainMode: true,
 };
 

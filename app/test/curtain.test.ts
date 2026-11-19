@@ -29,11 +29,19 @@ test("the curtain comes down on a swipe down past the latest lines of a working 
   assert.equal(curtainAfterSwipe(false, "up", { latest: true, working: true }), null, "a swipe up scrolls as ever");
 });
 
-test("the curtain stays down whatever the session does, until a swipe up", () => {
-  for (const working of [true, false]) {
+test("a swipe up on the dots lifts the curtain, and another swipe down leaves it", () => {
+  for (const latest of [true, false]) {
+    assert.equal(curtainAfterSwipe(true, "down", { latest, working: true }), true);
+    assert.equal(curtainAfterSwipe(true, "up", { latest, working: true }), false);
+  }
+});
+
+test("while the session is not working the screen shows, and a swipe only scrolls it", () => {
+  // The curtain is kept as it was, to cover the screen again with the next turn.
+  for (const down of [true, false]) {
     for (const latest of [true, false]) {
-      assert.equal(curtainAfterSwipe(true, "down", { latest, working }), true);
-      assert.equal(curtainAfterSwipe(true, "up", { latest, working }), false);
+      assert.equal(curtainAfterSwipe(down, "down", { latest, working: false }), null);
+      assert.equal(curtainAfterSwipe(down, "up", { latest, working: false }), null);
     }
   }
 });

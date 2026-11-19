@@ -515,7 +515,7 @@ class SessionScreen implements Screen {
   private wasWaiting = false; // a dialog was open, as of the last frame
   private armed: string | null = null; // the suggestion a first tap chose
   private armTimer: Cancel | null = null;
-  private curtain = false; // the screen is hidden, until a swipe up
+  private curtain = false; // the screen is hidden whenever the session works, until a swipe up
   private cursor = 0;
   private dialogOptions: string[] | null = null;
   private dialogFor = "";
@@ -549,19 +549,23 @@ class SessionScreen implements Screen {
     this.view.toLatest();
   }
 
-  /** The curtain is down, and the setting that allows it is still on. */
-  private get curtained() {
-    return this.curtain && this.app.hub.prefs.curtainMode;
-  }
-
-  /** Working with nothing to ask: the only thing the curtain shows, as moving dots. */
+  /** Working with nothing to ask: the only time the curtain hides the screen. */
   private busy(s: SessionSummary | undefined) {
     return s?.state === "working" && !s.waiting;
   }
 
+  /**
+   * The screen is hidden behind the dots. The curtain only covers a session that
+   * works: once it finishes or asks something the screen is back, and the curtain
+   * returns with the next turn.
+   */
+  private get curtained() {
+    return this.curtain && this.app.hub.prefs.curtainMode && this.busy(this.session);
+  }
+
   /** The screen changes with the clock, not only with the session. */
   animating() {
-    return this.curtained && this.busy(this.session);
+    return this.curtained;
   }
 
   /** Working or waiting: worth keeping the WebView awake for. */
@@ -664,9 +668,8 @@ class SessionScreen implements Screen {
     const s = this.session;
     const menu = sessionMenu(this.models);
     if (!s) return { header: "Session closed", body: wrap("This session is no longer running. Double-tap to go back.", BODY_INNER_W), menu };
-    // Behind the curtain nothing shows but the dots, and those only while the
-    // session works: when they stop, it has finished or wants an answer.
-    if (this.curtained) return { header: this.busy(s) ? workingDots(Date.now()) : "", body: [], menu, brightness: this.brightness(s, true) };
+    // Behind the curtain nothing shows but the dots.
+    if (this.curtained) return { header: workingDots(Date.now()), body: [], menu, brightness: this.brightness(s, true) };
     const items = this.app.hub.items.get(this.id);
     if (!items) this.app.hub.ensureItems(this.id); // self-heal if the cache was dropped
     const layout = items?.length ? layoutItems(items, BODY_INNER_W, this.app.hub.prefs.toolLines) : null;
@@ -711,8 +714,8 @@ class SessionScreen implements Screen {
     if (this.app.hub.prefs.curtainMode && (a.type === "up" || a.type === "down" || a.type === "tap")) {
       const swipe = a.type === "tap" ? null : curtainAfterSwipe(this.curtain, a.type, { latest: this.following, working: this.busy(s) });
       if (swipe !== null) this.curtain = swipe;
-      // Behind the curtain a tap has nothing to land on, and must not answer a dialog unseen.
-      if (swipe !== null || this.curtain) return;
+      // Behind the curtain a tap has nothing to land on.
+      if (swipe !== null || this.curtained) return;
     }
     const waiting = !!s?.waiting && this.following;
     const opts = s && waiting ? this.options(s) : [];

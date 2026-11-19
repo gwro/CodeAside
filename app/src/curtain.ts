@@ -22,9 +22,12 @@ export function workingDots(now: number): string {
  * What a swipe does to the curtain, or null when it is an ordinary swipe.
  * It comes down on a swipe down when there is nothing further down to scroll to,
  * and only while the session works: that is when there is something to wait for.
- * It then stays down, whatever the session does, until a swipe up lifts it.
+ * A swipe up on the dots lifts it. In between, when the session has finished or
+ * asks something, the screen is showing and a swipe scrolls it as ever: the
+ * curtain stays as it was, and covers the screen again with the next turn.
  */
 export function curtainAfterSwipe(down: boolean, dir: "up" | "down", at: { latest: boolean; working: boolean }): boolean | null {
-  if (down) return dir === "up" ? false : true;
-  return dir === "down" && at.latest && at.working ? true : null;
+  if (!at.working) return null;
+  if (down) return dir === "down";
+  return dir === "down" && at.latest ? true : null;
 }

@@ -248,10 +248,11 @@ stops the turn in progress and is taken at once; set `sendNowWhenWorking` to
 **Curtain mode** (the fork's copy of the app) hides a session's screen when the
 text is in the way. While the session is working, swipe down once more from its
 latest lines: everything goes, the header too, and only a row of dots moves in the
-middle of the top line. The dots show while the session works. When they stop, it
-has finished or is asking you something. The curtain stays down through whatever
-the session does next, and a swipe up lifts it. Behind it a tap does nothing, so a
-dialog you can't see is never answered; hold to talk still works.
+middle of the top line. The curtain only covers a session that is working: as soon
+as it finishes or asks you something, the screen is back, to read, scroll and
+answer as usual. Once you have answered and the session works again, the curtain
+comes back by itself. To end it, swipe up while the dots show. Behind the dots a
+tap does nothing; hold to talk still works.
 
 In a session's transcript, `»` marks your prompts and `▷` a tool call; calls to the
 same tool in a row collapse into one line (`Read ×3`), and only the last three
@@ -334,7 +335,7 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `latestOnPrompt` | true | on the glasses, jump to a session's latest lines when a prompt is sent to it or a dialog in it is answered, at the desk as well as from the glasses. With `false`, a view you have scrolled stays where it is |
 | `showSuggestions` | true | on the glasses, show the next prompt Claude Code suggests, when it suggests one, under an idle session's latest lines, marked `→`. Claude Code only draws it in its input box, so the hub reads it off the screen of sessions started with `codeaside claude`; view-only sessions show none. With `false`, the hub doesn't look |
 | `sendSuggestionOnTap` | true | on the glasses, let a tap on a shown suggestion send it as your next prompt once a second tap confirms it. After the first tap the glasses ask for the second for eight seconds; a double-tap or a swipe calls it off. With `false`, a suggestion is only shown |
-| `curtainMode` | true | on the glasses, let a swipe down from the latest lines of a session that is working hide its screen: the header and transcript go, and a row of dots moves while the session works and stops when it finishes or needs you. It stays hidden until a swipe up. With `false`, that swipe does nothing, as before |
+| `curtainMode` | true | on the glasses, let a swipe down from the latest lines of a session that is working hide its screen: the header and transcript go, and a row of dots moves while the session works. When it finishes or needs you the screen is back, and it is hidden again each time the session works, until a swipe up on the dots. With `false`, that swipe does nothing, as before |
 
 The last eight are for [the fork's copy of the glasses app](#the-forks-copy-of-the-glasses-app).
 Upstream's build in Even Hub ignores them and behaves as it always has. A setting

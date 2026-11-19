@@ -4,6 +4,7 @@ import { every, later, type Cancel } from "./timers.ts";
 import { BODY_INNER_W, BODY_LINES, FULL_BRIGHTNESS, HEADER_INNER_W, Display, type Frame, type MenuItem } from "./display.ts";
 import { GLYPH, ago, layoutItems, shortModel, stateLabel } from "./format.ts";
 import { TranscriptView } from "./scroll.ts";
+import { curtainAfterSwipe, workingDots } from "./curtain.ts";
 import type { Hub } from "./hub.ts";
 import type { Action } from "./input.ts";
 import { capLines, padTo, spread, truncate, width, wrap } from "./text.ts";
@@ -55,7 +56,9 @@ export class App {
     hub.subscribe(() => this.render());
     this.push(new HomeScreen(this));
     this.tickTimer = every(() => {
-      if (this.voice.phase === "recording") this.render();
+      // The seconds of a recording, and the dots of a session behind its curtain.
+      const top = this.top;
+      if (this.voice.phase === "recording" || (top instanceof SessionScreen && top.animating())) this.render();
     }, 500);
   }
 
@@ -512,6 +515,7 @@ class SessionScreen implements Screen {
   private wasWaiting = false; // a dialog was open, as of the last frame
   private armed: string | null = null; // the suggestion a first tap chose
   private armTimer: Cancel | null = null;
+  private curtain = false; // the screen is hidden, until a swipe up
   private cursor = 0;
   private dialogOptions: string[] | null = null;
   private dialogFor = "";
@@ -543,6 +547,21 @@ class SessionScreen implements Screen {
   /** Show the latest lines, leaving wherever the view was scrolled or held. */
   toLatest() {
     this.view.toLatest();
+  }
+
+  /** The curtain is down, and the setting that allows it is still on. */
+  private get curtained() {
+    return this.curtain && this.app.hub.prefs.curtainMode;
+  }
+
+  /** Working with nothing to ask: the only thing the curtain shows, as moving dots. */
+  private busy(s: SessionSummary | undefined) {
+    return s?.state === "working" && !s.waiting;
+  }
+
+  /** The screen changes with the clock, not only with the session. */
+  animating() {
+    return this.curtained && this.busy(this.session);
   }
 
   /** Working or waiting: worth keeping the WebView awake for. */
@@ -645,6 +664,9 @@ class SessionScreen implements Screen {
     const s = this.session;
     const menu = sessionMenu(this.models);
     if (!s) return { header: "Session closed", body: wrap("This session is no longer running. Double-tap to go back.", BODY_INNER_W), menu };
+    // Behind the curtain nothing shows but the dots, and those only while the
+    // session works: when they stop, it has finished or wants an answer.
+    if (this.curtained) return { header: this.busy(s) ? workingDots(Date.now()) : "", body: [], menu, brightness: this.brightness(s, true) };
     const items = this.app.hub.items.get(this.id);
     if (!items) this.app.hub.ensureItems(this.id); // self-heal if the cache was dropped
     const layout = items?.length ? layoutItems(items, BODY_INNER_W, this.app.hub.prefs.toolLines) : null;
@@ -686,6 +708,12 @@ class SessionScreen implements Screen {
   async action(a: Action) {
     const s = this.session;
     const page = SCROLL_STEP;
+    if (this.app.hub.prefs.curtainMode && (a.type === "up" || a.type === "down" || a.type === "tap")) {
+      const swipe = a.type === "tap" ? null : curtainAfterSwipe(this.curtain, a.type, { latest: this.following, working: this.busy(s) });
+      if (swipe !== null) this.curtain = swipe;
+      // Behind the curtain a tap has nothing to land on, and must not answer a dialog unseen.
+      if (swipe !== null || this.curtain) return;
+    }
     const waiting = !!s?.waiting && this.following;
     const opts = s && waiting ? this.options(s) : [];
     // Only a second tap, straight after the first, sends a suggestion: anything else calls it off.

@@ -173,7 +173,7 @@ checkout, so the examples below work as written; without it, write
 The app in `app/` started as upstream's 0.3.1 and is now versioned with the fork.
 It has a name of its own, **CodeAside**, so that it isn't taken for upstream's app
 or an edition of it. The hub and its command are `codeaside` as well.
-It reads seven display settings from the hub, all described under
+It reads eight display settings from the hub, all described under
 [Configuration](#configuration):
 
 | Setting | What it does |
@@ -185,6 +185,7 @@ It reads seven display settings from the hub, all described under
 | `toolLines` | how many lines a tool call's description may take |
 | `showSuggestions` | shows the next prompt Claude Code suggests |
 | `sendSuggestionOnTap` | lets two taps send that suggestion |
+| `curtainMode` | lets a swipe down past the latest lines hide a working session's screen |
 
 Apart from the settings, a view you have scrolled stays on the same line while new
 lines arrive, and the header shows how many lines are below it (`↓13`).
@@ -233,7 +234,7 @@ being published:
 
 | Gesture | Session list | Session |
 |---|---|---|
-| Swipe | move | scroll, or move between options |
+| Swipe | move | scroll, or move between options; down past the latest lines of a working session, hide the screen (up shows it again) |
 | Tap | open | choose the highlighted option, or jump to the latest; twice, to send a suggested prompt |
 | Hold | talk to the highlighted session | talk, or answer an open question; hold again to redo |
 | Double-tap | exit | back |
@@ -243,6 +244,14 @@ After a hold, the transcript of what you said waits on screen: tap sends it, hol
 records again, double-tap discards it. Sent to a session that is working, it
 stops the turn in progress and is taken at once; set `sendNowWhenWorking` to
 `false` to have it wait for the turn to end instead.
+
+**Curtain mode** (the fork's copy of the app) hides a session's screen when the
+text is in the way. While the session is working, swipe down once more from its
+latest lines: everything goes, the header too, and only a row of dots moves in the
+middle of the top line. The dots show while the session works. When they stop, it
+has finished or is asking you something. The curtain stays down through whatever
+the session does next, and a swipe up lifts it. Behind it a tap does nothing, so a
+dialog you can't see is never answered; hold to talk still works.
 
 In a session's transcript, `»` marks your prompts and `▷` a tool call; calls to the
 same tool in a row collapse into one line (`Read ×3`), and only the last three
@@ -325,8 +334,9 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `latestOnPrompt` | true | on the glasses, jump to a session's latest lines when a prompt is sent to it or a dialog in it is answered, at the desk as well as from the glasses. With `false`, a view you have scrolled stays where it is |
 | `showSuggestions` | true | on the glasses, show the next prompt Claude Code suggests, when it suggests one, under an idle session's latest lines, marked `→`. Claude Code only draws it in its input box, so the hub reads it off the screen of sessions started with `codeaside claude`; view-only sessions show none. With `false`, the hub doesn't look |
 | `sendSuggestionOnTap` | true | on the glasses, let a tap on a shown suggestion send it as your next prompt once a second tap confirms it. After the first tap the glasses ask for the second for eight seconds; a double-tap or a swipe calls it off. With `false`, a suggestion is only shown |
+| `curtainMode` | true | on the glasses, let a swipe down from the latest lines of a session that is working hide its screen: the header and transcript go, and a row of dots moves while the session works and stops when it finishes or needs you. It stays hidden until a swipe up. With `false`, that swipe does nothing, as before |
 
-The last seven are for [the fork's copy of the glasses app](#the-forks-copy-of-the-glasses-app).
+The last eight are for [the fork's copy of the glasses app](#the-forks-copy-of-the-glasses-app).
 Upstream's build in Even Hub ignores them and behaves as it always has. A setting
 left out of the file has its default, so the file only needs the ones you change.
 

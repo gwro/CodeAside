@@ -69,6 +69,9 @@ const DEFAULTS = {
   // Let a tap on a shown suggestion send it as the next prompt, once a second tap
   // confirms it.
   sendSuggestionOnTap: true,
+  // Curtain mode: a swipe down past the latest lines of a working session hides
+  // its screen, leaving only moving dots while it works, until a swipe up.
+  curtainMode: true,
 };
 
 /** Read the raw config file without generating tokens (used at import time). */

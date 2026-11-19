@@ -5,6 +5,16 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
+## Unreleased
+
+- Curtain mode, in the fork's copy of the glasses app, behind `curtainMode` (on
+  by default). While a session works, a swipe down from its latest lines hides
+  the screen, header included. A row of dots moves in the middle of the top line
+  while the session works and stops when it finishes or asks something. The
+  curtain stays down through whatever the session does next, until a swipe up.
+  Behind it a tap does nothing, so a dialog that isn't showing is never
+  answered; hold to talk works as usual.
+
 ## 0.2.0
 
 A prompt from the glasses now interrupts a working session by default, and three

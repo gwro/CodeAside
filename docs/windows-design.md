@@ -517,6 +517,15 @@ What the copy adds, each behind a setting in the hub's config:
   which matters because a running host only takes new code when its last session
   ends. Two taps send a shown suggestion (`sendSuggestionOnTap`): the first asks
   for the second, and the hub then types the text as any prompt from the glasses.
+- **Curtain mode** (`curtainMode`). A swipe down from the latest lines of a
+  working session hides the screen: an empty body, and a header line that holds only
+  one to three dots, in its middle, while the session works and nothing otherwise. The curtain
+  belongs to the open session screen and stays down until a swipe up, whatever
+  state the session passes through. The dots are worked out from the clock and
+  redrawn on the app's half-second tick, so a step is one write to the glasses a
+  second, and the slow IMU stream that keeps the WebView awake for a working
+  session keeps the tick running. Behind the curtain a tap is dropped, since it
+  would otherwise answer a dialog nobody can see.
 
 **Restoring sessions after a hub restart.** A session in a host pane was dropped
 when the process id saved for it had exited, and came back, as "starting", only at

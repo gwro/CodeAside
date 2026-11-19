@@ -24,6 +24,8 @@ export interface Prefs {
   showSuggestions: boolean;
   /** Let a tap on a shown suggestion, confirmed by a second tap, send it as the next prompt. */
   sendSuggestionOnTap: boolean;
+  /** Let a swipe down past the latest lines of a working session hide its screen behind a curtain. */
+  curtainMode: boolean;
 }
 
 interface HubState {
@@ -48,7 +50,7 @@ export class Hub {
   /** Agents the hub can start. Older hubs don't say, and only run Claude Code. */
   agents: Agent[] = ["claude"];
   /** Display preferences from the hub's config. These are its defaults, for a hub that sends none. */
-  prefs: Prefs = { replyFromStart: true, workingBrightness: 0, latestOnTalk: true, toolLines: TOOL_LINES, latestOnPrompt: true, showSuggestions: true, sendSuggestionOnTap: true };
+  prefs: Prefs = { replyFromStart: true, workingBrightness: 0, latestOnTalk: true, toolLines: TOOL_LINES, latestOnPrompt: true, showSuggestions: true, sendSuggestionOnTap: true, curtainMode: true };
   private modelCache = new Map<string, ModelChoice[]>();
   connected = false;
   lastError = "";

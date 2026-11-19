@@ -226,6 +226,7 @@ export function startHub({ quiet = false, feed = true } = {}) {
         latestOnPrompt: cfg.latestOnPrompt === true,
         showSuggestions: cfg.showSuggestions === true,
         sendSuggestionOnTap: cfg.sendSuggestionOnTap === true,
+        curtainMode: cfg.curtainMode === true,
       };
       return send(res, 200, { seq, agents, prefs, sessions: registry.list().map((s) => s.summaryJSON()) });
     }

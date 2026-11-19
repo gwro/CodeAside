@@ -11,6 +11,8 @@ export interface HubConfig {
 export interface Prefs {
   /** Hold a reply too long for the screen at its first line instead of showing its end. */
   replyFromStart: boolean;
+  /** Text brightness while a session works, 0 (dimmest) to 4 (full, so no dimming). */
+  workingBrightness: number;
 }
 
 interface HubState {
@@ -35,7 +37,7 @@ export class Hub {
   /** Agents the hub can start. Older hubs don't say, and only run Claude Code. */
   agents: Agent[] = ["claude"];
   /** Display preferences from the hub's config. Hubs that don't send them get the defaults. */
-  prefs: Prefs = { replyFromStart: false };
+  prefs: Prefs = { replyFromStart: false, workingBrightness: 4 };
   private modelCache = new Map<string, ModelChoice[]>();
   connected = false;
   lastError = "";

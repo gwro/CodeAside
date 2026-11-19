@@ -11,6 +11,10 @@ is kept at the end for reference.
   is held at its first line until you scroll down or tap for the latest, instead
   of showing its end. It is off by default and needs the fork's copy of the
   glasses app (`glancecode pair --dev`); the Even Hub build ignores it.
+- New `workingBrightness` setting, 0 to 4. Below 4, a session's screen dims to that
+  level while the session works and returns to full brightness when it finishes
+  or needs you. It is 4 (no dimming) by default and also needs the fork's copy of
+  the glasses app.
 - A scrolled transcript now stays on the same line while new lines arrive, and the
   header counts the lines below the view (`↓13`).
 - The hub has been paired and used with G2 glasses.

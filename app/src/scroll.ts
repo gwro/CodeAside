@@ -32,8 +32,8 @@ export class TranscriptView {
   private scrolledTo: Anchor | null = null;
   /** The reply the user has moved on from. */
   private readKey = "";
-  // As of the last place():
-  private items: Item[] = [];
+  // As of the last place(). The keys are a copy: the hub trims its list in place.
+  private keys: string[] = [];
   private starts: number[] = [];
   private top = 0;
   private maxTop = 0;
@@ -61,7 +61,7 @@ export class TranscriptView {
       this.scrolledTo = null; // its item is no longer in the transcript
       if (holdReplies && replyKey && replyKey !== this.readKey && layout.starts[reply] < maxTop) top = layout.starts[reply];
     }
-    this.items = items;
+    this.keys = items.map((it) => it.key);
     this.starts = layout.starts;
     this.top = top ?? maxTop;
     this.maxTop = maxTop;
@@ -72,10 +72,10 @@ export class TranscriptView {
   /** Move by `delta` lines from where the last place() put the view. */
   scroll(delta: number) {
     const top = Math.max(0, this.top + delta);
-    if (top >= this.maxTop || !this.items.length) return this.toLatest();
+    if (top >= this.maxTop || !this.keys.length) return this.toLatest();
     let i = 0;
     while (i + 1 < this.starts.length && this.starts[i + 1] <= top) i++;
-    this.scrolledTo = { key: this.items[i].key, offset: top - this.starts[i] };
+    this.scrolledTo = { key: this.keys[i], offset: top - this.starts[i] };
   }
 
   toLatest() {

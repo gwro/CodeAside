@@ -48,6 +48,9 @@ const DEFAULTS = {
   // On the glasses, hold a reply too long for the screen at its first line instead of
   // showing its end. Only this fork's build of the glasses app reads it.
   replyFromStart: false,
+  // On the glasses, the text brightness while a session works, from 0 (dimmest) to
+  // 4 (full, which means no dimming). Also read only by this fork's build of the app.
+  workingBrightness: 4,
 };
 
 /** Read the raw config file without generating tokens (used at import time). */

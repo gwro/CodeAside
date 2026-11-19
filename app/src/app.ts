@@ -1,7 +1,7 @@
 // Screens and controller for the glasses UI.
 import { AudioInputSource, ImuReportPace, type EvenAppBridge } from "@evenrealities/even_hub_sdk";
 import { every, later, type Cancel } from "./timers.ts";
-import { BODY_INNER_W, BODY_LINES, HEADER_INNER_W, Display, type Frame, type MenuItem } from "./display.ts";
+import { BODY_INNER_W, BODY_LINES, FULL_BRIGHTNESS, HEADER_INNER_W, Display, type Frame, type MenuItem } from "./display.ts";
 import { GLYPH, ago, layoutItems, shortModel, stateLabel } from "./format.ts";
 import { TranscriptView } from "./scroll.ts";
 import type { Hub } from "./hub.ts";
@@ -158,6 +158,8 @@ export class App {
     frame = this.overlayVoice(frame);
     if (this.toastText) frame = { ...frame, header: truncate(this.toastText, HEADER_INNER_W) };
     else if (!this.hub.connected) frame = { ...frame, header: spread(truncate(frame.header, HEADER_INNER_W - 90), "reconnecting", HEADER_INNER_W) };
+    // What the user said and what a toast tells them are there to be read now.
+    if (frame.brightness !== undefined && (this.voice.phase !== "idle" || this.toastText)) frame = { ...frame, brightness: FULL_BRIGHTNESS };
     this.display.show(frame);
   }
 
@@ -613,7 +615,18 @@ class SessionScreen implements Screen {
     if (!following) rightParts.push(`↓${transcript.length - start - room}`);
     if (!following && s.waiting) rightParts.push("◆ tap");
     rightParts.push(s.controllable ? shortModel(s.model) : "view only");
-    return { header: spread(left, rightParts.filter(Boolean).join("  "), HEADER_INNER_W), body, menu };
+    return { header: spread(left, rightParts.filter(Boolean).join("  "), HEADER_INNER_W), body, menu, brightness: this.brightness(s, following) };
+  }
+
+  /**
+   * With a working brightness set, the text dims while the session works and
+   * comes back to full when it stops or needs the user. Text the user has
+   * scrolled to, or a reply held for them, stays at full.
+   */
+  private brightness(s: SessionSummary, following: boolean): number | undefined {
+    const level = this.app.hub.prefs.workingBrightness;
+    if (!Number.isInteger(level) || level < 0 || level >= FULL_BRIGHTNESS) return undefined;
+    return s.state === "working" && following ? level : FULL_BRIGHTNESS;
   }
 
   async action(a: Action) {

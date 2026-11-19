@@ -68,6 +68,16 @@ test("scrolling stays on the same line while the transcript changes around it", 
   assert.equal(place(view, items), layoutItems(items, W).starts[1] + 3);
 });
 
+test("a scroll lands on the right line when the list was trimmed in place since the last frame", () => {
+  const view = new TranscriptView();
+  const items = [user("u0", "earlier"), reply("a0", 2), user("u1"), reply("a1", 20)];
+  place(view, items, false);
+  items.splice(0, 2); // what the hub client does once its list is full
+  view.scroll(-3);
+  // Three lines up from the end of a1, wherever a1 now starts.
+  assert.equal(place(view, items, false), 21 - PAGE - 3);
+});
+
 test("scrolling down to the end returns to the latest, and that reply stops holding", () => {
   const view = new TranscriptView();
   const items = [user("u1"), reply("a1", 12)]; // 13 lines: tops 0 to 4

@@ -334,7 +334,11 @@ const commands = {
     if (rest.includes("--dev")) {
       const appUrl = `${url}/?hub=${encodeURIComponent(url)}&token=${encodeURIComponent(cfg.token)}`;
       console.log("\nDevelopment sideload (Even app > Even Hub > developer > Scan QR):");
-      const r = spawnSync("npx", ["--yes", "@evenrealities/evenhub-cli", "qr", "--url", appUrl], { stdio: "inherit", shell: WIN });
+      // On Windows npx is a .cmd file and needs the shell, and cmd.exe splits an
+      // unquoted URL at its "&": the QR code would lose the token. Quote it.
+      const r = WIN
+        ? spawnSync(`npx --yes @evenrealities/evenhub-cli qr --url "${appUrl}"`, { stdio: "inherit", shell: true })
+        : spawnSync("npx", ["--yes", "@evenrealities/evenhub-cli", "qr", "--url", appUrl], { stdio: "inherit" });
       if (r.status !== 0) console.log(appUrl);
     }
   },

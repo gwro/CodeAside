@@ -5,12 +5,14 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
-## Unreleased (glasses app 0.1.3)
+## 0.3.2 (glasses app 0.1.3)
 
-Plans Claude asks to go ahead with. The plan's text and its options come from the
-hub, so they need a restart of the hub (`codeaside service restart`) and then work
-with any build of the glasses app. The rest is in the glasses app and needs the
-new build on the glasses.
+Plans Claude asks to go ahead with, and two faults at the PC. The plan's text and
+its options come from the hub, so they need a restart of the hub (`codeaside
+service restart`) and then work with any build of the glasses app. The rest of
+what is new for plans is in the glasses app and needs the new build on the
+glasses (`npm run pack:personal`, or `codeaside pair --dev` to sideload). The fix
+to scrolling is in the attach client and loads the next time you attach.
 
 - A plan waiting for approval reached the glasses as "Allow ExitPlanMode: Claude
   Code needs your approval for the plan" over "Yes", "Yes, and don't ask again"

@@ -2,7 +2,7 @@
 import { AudioInputSource, ImuReportPace, type EvenAppBridge } from "@evenrealities/even_hub_sdk";
 import { every, later, type Cancel } from "./timers.ts";
 import { BODY_INNER_W, BODY_LINES, FULL_BRIGHTNESS, HEADER_INNER_W, Display, type Frame, type MenuItem } from "./display.ts";
-import { GLYPH, ago, layoutItems, shortModel, stateLabel } from "./format.ts";
+import { GLYPH, PLAN_FEEDBACK, ago, isPlanApproval, layoutItems, shortModel, stateLabel } from "./format.ts";
 import { TranscriptView } from "./scroll.ts";
 import { curtainAfterSwipe, workingDots } from "./curtain.ts";
 import type { Hub } from "./hub.ts";
@@ -19,6 +19,9 @@ const SUGGESTION = "→ ";
 const NO_SUGGESTION = padTo("", width(SUGGESTION));
 /** How long a first tap on a suggestion waits for the second one that sends it. */
 const SUGGESTION_CONFIRM_MS = 8000;
+/** How often a dialog's options are read off the terminal before giving up, and how far apart. */
+const DIALOG_READS = 4;
+const DIALOG_READ_GAP_MS = 800;
 
 interface Screen {
   frame(): Frame;
@@ -578,7 +581,7 @@ class SessionScreen implements Screen {
     const s = this.session;
     if (!s || s.state === "ended") return "This session has ended";
     if (!s.controllable) return this.viewOnlyHint();
-    if (s.waiting?.kind === "permission") return "Approve or deny first, then hold to talk";
+    if (s.waiting?.kind === "permission" && !isPlanApproval(s.waiting)) return "Approve or deny first, then hold to talk";
     return "Can't talk to this session";
   }
 
@@ -599,17 +602,30 @@ class SessionScreen implements Screen {
       this.dialogFor = key;
       this.dialogOptions = null;
       this.cursor = 0;
-      this.app.hub
-        .dialog(this.id)
-        .then(({ dialog }) => {
-          if (this.dialogFor === key && dialog.options.length) {
-            this.dialogOptions = dialog.options;
-            this.app.render();
-          }
-        })
-        .catch(() => {});
+      this.readOptions(key, DIALOG_READS);
     }
-    return this.dialogOptions || (w.kind === "permission" ? ["Yes", "Yes, and don't ask again", "No"] : []);
+    // A plan's approval has options of its own: until they are read there are none to show.
+    return this.dialogOptions || (w.kind === "permission" && !isPlanApproval(w) ? ["Yes", "Yes, and don't ask again", "No"] : []);
+  }
+
+  /**
+   * Read the option labels of the dialog `key` stands for. The hub hears of a
+   * dialog before the terminal has drawn it, and one read then finds no options,
+   * so a read that comes back empty is tried again a few times.
+   */
+  private readOptions(key: string, readsLeft: number) {
+    const again = () => {
+      if (readsLeft > 1 && this.dialogFor === key) later(() => this.dialogFor === key && this.readOptions(key, readsLeft - 1), DIALOG_READ_GAP_MS);
+    };
+    this.app.hub
+      .dialog(this.id)
+      .then(({ dialog }) => {
+        if (this.dialogFor !== key) return;
+        if (!dialog.options.length) return again();
+        this.dialogOptions = dialog.options;
+        this.app.render();
+      })
+      .catch(again);
   }
 
   private waitingLines(s: SessionSummary): string[] {
@@ -618,7 +634,10 @@ class SessionScreen implements Screen {
     const opts = this.options(s);
     this.cursor = Math.max(0, Math.min(this.cursor, Math.max(0, opts.length - 1)));
     const lines: string[] = [""];
-    if (w.kind === "permission") {
+    if (isPlanApproval(w)) {
+      // The plan is the reply above, so the question doesn't repeat what it is about.
+      lines.push(...wrap("Proceed with this plan?", BODY_INNER_W, "◆ ", "   "));
+    } else if (w.kind === "permission") {
       lines.push(...wrap(`Allow ${w.tool || "this"}: ${w.detail || ""}`, BODY_INNER_W, "◆ ", "   ").slice(0, 3));
     } else {
       const q = w.questions?.[w.questionIndex || 0];
@@ -679,7 +698,8 @@ class SessionScreen implements Screen {
     if (prefs.latestOnPrompt && this.wasWaiting && !s.waiting) this.view.toLatest();
     this.wasWaiting = !!s.waiting;
     // A dialog outranks the start of a long reply: it shows with the latest lines.
-    const holdReplies = prefs.replyFromStart && !s.waiting;
+    // Except a plan's approval, where the reply is the plan to read before answering.
+    const holdReplies = prefs.replyFromStart && (!s.waiting || isPlanApproval(s.waiting));
     const top = items && layout ? this.view.place(items, layout, BODY_LINES, holdReplies, prefs.latestOnPrompt) : null;
     const following = (this.following = top === null);
     // Under the latest lines: the dialog to answer, or failing that a suggested prompt.
@@ -739,6 +759,10 @@ class SessionScreen implements Screen {
         }
         if (s && waiting && opts.length) {
           const kind = s.waiting!.kind;
+          if (isPlanApproval(s.waiting) && PLAN_FEEDBACK.test(opts[this.cursor])) {
+            this.app.toast("Hold to talk and say what to change");
+            return;
+          }
           const r = await this.app.hub.choose(this.id, kind, this.cursor);
           this.app.toast(`Chose: ${r.chosen}`);
           this.cursor = 0;
@@ -786,10 +810,11 @@ class SessionScreen implements Screen {
   voiceTarget() {
     const s = this.session;
     if (!s?.controllable) return null;
-    if (s.waiting?.kind === "permission") return null; // approve or deny first; a typed Enter would pick an option
+    // Approve or deny first; a typed Enter would pick an option. A plan takes words: what to change in it.
+    if (s.waiting?.kind === "permission" && !isPlanApproval(s.waiting)) return null;
     return async (text: string) => {
       const current = this.session;
-      if (current?.waiting?.kind === "question") await this.app.hub.answer(this.id, text);
+      if (current?.waiting?.kind === "question" || isPlanApproval(current?.waiting)) await this.app.hub.answer(this.id, text);
       else await this.app.hub.prompt(this.id, text);
       this.view.toLatest();
     };

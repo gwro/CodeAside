@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { appendFileSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { entryMeta, entryToItems, toolLabel, TranscriptTail } from "../hub/transcript.mjs";
+import { entryMeta, entryToItems, planItem, toolLabel, TranscriptTail } from "../hub/transcript.mjs";
 import { readDialog, suggestionIn } from "../hub/pane.mjs";
 
 test("user prompt becomes a user item; injected context is dropped", () => {
@@ -215,6 +215,64 @@ test("readDialog separates options that an older host returns as one line", () =
   // A number inside a label is not the start of another option.
   const inside = ` Do you want to proceed?\n ❯ 1. Yes, run step  3. of the plan\n   2. No\n Esc to cancel`;
   assert.deepEqual(readDialog(inside).options, ["Yes, run step  3. of the plan", "No"]);
+});
+
+// The approval of a plan as the host read it from Claude Code 2.1.330 at 200
+// columns: the end of the plan, a rule, the question, its options.
+const planDialog = (planLines) => `${planLines.join("\n")}
+   - The bed is seen at half resolution.${" ".repeat(60)}↓  ${"─".repeat(197)}
+   Claude has written up a plan and is ready to execute. Would you like to proceed?
+   ❯ 1. Yes, and use auto mode
+     2. Yes, manually approve edits
+     3. Tell Claude what to change
+        shift+tab to approve with this feedback
+   ctrl+g to edit in Notepad · C:\\Users\\me\\.claude\\plans\\a-plan.md`;
+const PLAN_OPTIONS = ["Yes, and use auto mode", "Yes, manually approve edits", "Tell Claude what to change"];
+
+test("readDialog reads the approval of a plan, whatever numbered lines the plan has", () => {
+  const prompt = "Claude has written up a plan and is ready to execute. Would you like to proceed?";
+  assert.deepEqual(readDialog(planDialog(["   Known limits"])), { kind: "permission", options: PLAN_OPTIONS, prompt, plan: true });
+  // A step of the plan above the dialog is not an option. "5." without a "4." used
+  // to leave a hole in the numbers, and the glasses showed the stand-in options.
+  assert.deepEqual(readDialog(planDialog(["   5. Material values", "   Set on the two materials."])).options, PLAN_OPTIONS);
+  assert.deepEqual(readDialog(planDialog(["   3. Patch the graph", "   4. Caustics texture", "   5. Material values"])).options, PLAN_OPTIONS);
+  assert.deepEqual(readDialog(planDialog(["   1. Look at the bed first", "   2. New shader file"])).options, PLAN_OPTIONS);
+  // A read that misses option 1 is no dialog yet, and the plan's own step 1 doesn't fill in for it.
+  const holed = planDialog(["   1. Look at the bed first"]).replace(/^.*1\. Yes, and use auto mode\s*$/m, "");
+  assert.deepEqual(readDialog(holed), { kind: "unknown", options: [] });
+  // Other versions ask with the question alone.
+  const older = ` Ready to code?\n Here is Claude's plan:\n 1. Fix it\n 2. Test it\n Would you like to proceed?\n ❯ 1. Yes, and auto-accept edits\n   2. Yes, and manually approve edits\n   3. No, keep planning`;
+  assert.deepEqual(readDialog(older), { kind: "permission", options: ["Yes, and auto-accept edits", "Yes, and manually approve edits", "No, keep planning"], prompt: "Would you like to proceed?", plan: true });
+  // A tool approval is not a plan, and a list above it is not part of it either.
+  const tool = ` 1. first\n 2. second\n 3. third\n Bash command\n   touch x\n Do you want to proceed?\n ❯ 1. Yes\n   2. No\n Esc to cancel · Tab to amend`;
+  assert.deepEqual(readDialog(tool), { kind: "permission", options: ["Yes", "No"], prompt: "Do you want to proceed?" });
+});
+
+test("readDialog takes a reply that ends in a question and a list for what it is", () => {
+  const rule = "─".repeat(200);
+  const reply = `● Two ways to do it. Would you like to proceed?\n  1. Yes, the quick way\n  2. Yes, the thorough way\n✻ Worked for 12s\n${rule}❯\n${rule}  ⏵⏵ auto mode on (shift+tab to cycle)`;
+  assert.deepEqual(readDialog(reply), { kind: "input", options: [] });
+  const asked = `● The migration is ready.\n  Do you want to proceed?\n  1. Yes\n  2. No\n${rule}❯ some typed text\n${rule}  ⏵⏵ auto mode on (shift+tab to cycle)`;
+  assert.equal(readDialog(asked).kind, "input");
+});
+
+test("a plan shows whole as a reply, and names its approval", () => {
+  const plan = `# Clear water for the lake\n\n## Context\n\n${"The lake reads as a dark sheet. ".repeat(200)}\n\n1. Look at the bed first`;
+  const call = (id, input) => ({ type: "assistant", uuid: `entry-${id}`, timestamp: "2026-01-01T00:00:00Z", message: { model: "claude-fable-5", content: [{ type: "tool_use", id, name: "ExitPlanMode", input }] } });
+  const [item, ...rest] = entryToItems(call("toolu_1", { plan, planFilePath: "C:/plans/a-plan.md" }));
+  assert.equal(rest.length, 0);
+  assert.equal(item.kind, "assistant");
+  assert.equal(item.text, plan, "longer than a reply may be, and not cut");
+  assert.ok(entryToItems(call("toolu_2", { plan: "x".repeat(30000) }))[0].text.length < 20100);
+  assert.equal(toolLabel("ExitPlanMode", { plan }), "Clear water for the lake");
+  // A response that writes the plan's file and asks to go ahead in one go leaves
+  // the call in the transcript empty: there is only the call to show.
+  assert.deepEqual(entryToItems(call("toolu_3", {})).map((i) => [i.kind, i.tool, i.text]), [["tool", "ExitPlanMode", ""]]);
+  // The hook for the call has the plan then, and its item is the transcript's own
+  // for the same call, so a plan that both of them hold shows once.
+  assert.deepEqual(planItem("toolu_1", plan, "2026-01-01T00:00:00Z"), item);
+  assert.equal(planItem("toolu_3", "", ""), null);
+  assert.equal(planItem(undefined, plan, ""), null);
 });
 
 test("transcript cleanup drops sound-effect captions and silence hallucinations", async () => {

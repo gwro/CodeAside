@@ -20,6 +20,15 @@ const MAX_TEXT = 4000;
 /** A label no display shows whole; the glasses app cuts it to the lines it has. */
 const FULL_LABEL = 600;
 
+/** A plan is read whole before it is approved, so it gets more room than a reply. */
+const MAX_PLAN = 20000;
+
+/** What a plan is called: its first line, without the heading marks. */
+export function planTitle(plan) {
+  const line = String(plan ?? "").split("\n").find((l) => l.trim()) || "";
+  return line.replace(/^\s*#+\s*/, "").trim();
+}
+
 /**
  * A short description of a tool call. By default it is cut to about a line.
  * With `full`, it is left long enough for a reader that fits it to its own display.
@@ -61,6 +70,8 @@ export function toolLabel(name, input = {}, { full = false } = {}) {
       return "update tasks";
     case "AskUserQuestion":
       return clip(input.questions?.[0]?.question, 60);
+    case "ExitPlanMode":
+      return clip(planTitle(input.plan));
     default:
       if (name?.startsWith("mcp__")) return name.split("__").pop();
       return clip(input.description || "", 50);
@@ -83,8 +94,22 @@ function textOf(content) {
   return "";
 }
 
-function clipText(s) {
-  return s.length > MAX_TEXT ? s.slice(0, MAX_TEXT) + "…" : s;
+function clipText(s, max = MAX_TEXT) {
+  return s.length > max ? s.slice(0, max) + "…" : s;
+}
+
+/**
+ * The plan Claude asks to go ahead with, as a reply: the terminal shows it above
+ * the approval, and it is what the approval is about. Two places know it. The
+ * call in the transcript holds it when the plan's file was there as the call
+ * was written, which it is not when the same response wrote that file. The hook
+ * for the call always holds it. The item is keyed by the call, so it shows once.
+ * @returns {Item | null} null when there is no plan to show, or no call to key it by
+ */
+export function planItem(callId, plan, ts) {
+  const text = typeof plan === "string" ? plan.trim() : "";
+  if (!text || !callId) return null;
+  return { key: `plan:${callId}`, kind: "assistant", text: clipText(text, MAX_PLAN), ts };
 }
 
 /** Parse the <task-notification> block Claude Code injects when background work ends. */
@@ -154,6 +179,8 @@ export function entryToItems(entry) {
         // thinking blocks are empty in the transcript and the rest are short narration.
         out.push({ key: `${uuid}:${i}`, kind: "assistant", text: clipText(b.thinking.trim()), ts });
       } else if (b?.type === "tool_use") {
+        const plan = b.name === "ExitPlanMode" ? planItem(b.id, b.input?.plan, ts) : null;
+        if (plan) return void out.push(plan);
         const text = toolLabel(b.name, b.input || {});
         const full = toolLabel(b.name, b.input || {}, { full: true });
         out.push({

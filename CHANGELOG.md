@@ -5,6 +5,36 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
+## Unreleased (glasses app 0.1.3)
+
+Plans Claude asks to go ahead with. The plan's text and its options come from the
+hub, so they need a restart of the hub (`codeaside service restart`) and then work
+with any build of the glasses app. The rest is in the glasses app and needs the
+new build on the glasses.
+
+- A plan waiting for approval reached the glasses as "Allow ExitPlanMode: Claude
+  Code needs your approval for the plan" over "Yes", "Yes, and don't ask again"
+  and "No", without the plan. The hub knew only the question a tool approval asks
+  with, and it read every numbered line near the bottom of the screen as an
+  option, so a numbered step of the plan above the dialog added options or made
+  the dialog unreadable, and the glasses showed three stand-ins. The hub now
+  reads the plan's dialog with the options Claude Code offers ("Yes, and use auto
+  mode", "Yes, manually approve edits", "Tell Claude what to change"), and takes
+  as options only the numbered lines under the question. A reply that ends in
+  such a question and a list is no longer taken for a dialog.
+- The plan is in the transcript, as a reply, whole up to 20,000 characters. The
+  glasses app asks "Proceed with this plan?" under it and shows no options until
+  the real ones are read: it asks the hub again for a few seconds when the
+  terminal has not drawn the dialog yet.
+- With `replyFromStart`, a plan that arrives while its session is open is held at
+  its first line, to be read before it is answered. The header shows `◆ tap`;
+  swipe down to read on, tap to jump to the options.
+- "Tell Claude what to change" is a text box in the terminal. A tap on it says to
+  hold to talk, and what you say is sent as what to change in the plan. The hub
+  refuses to press that option's number, in any build of the app: it would only
+  open the box, and the next number pressed would be typed into it.
+- A push for a plan says "has a plan to approve" and names the plan.
+
 ## 0.3.1 (glasses app 0.1.2)
 
 A fix to curtain mode. It is in the glasses app, so it needs the new build on the

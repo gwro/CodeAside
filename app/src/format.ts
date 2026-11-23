@@ -1,5 +1,5 @@
 // Turn session items into wrapped display lines.
-import type { Item, SessionSummary, State } from "./types.ts";
+import type { Item, SessionSummary, State, Waiting } from "./types.ts";
 import { capLines, wrap, width } from "./text.ts";
 
 export const GLYPH: Record<State, string> = {
@@ -17,6 +17,20 @@ export function stateLabel(s: SessionSummary): string {
   if (s.state === "ended") return "ended";
   return s.backgroundTasks ? `idle · ${s.backgroundTasks} bg` : "idle";
 }
+
+/**
+ * Claude asks to go ahead with a plan. A permission, but with the plan to read
+ * above it and options of its own, none of which the usual three stand for.
+ */
+export function isPlanApproval(w: Waiting | null | undefined): boolean {
+  return w?.kind === "permission" && w.tool === "ExitPlanMode";
+}
+
+/**
+ * The option of a plan's approval that takes what to change, in words. At the
+ * desk it is a text box, so from the glasses it is answered by voice.
+ */
+export const PLAN_FEEDBACK = /^Tell Claude what to change/i;
 
 export function shortModel(model: string | null): string {
   if (!model) return "";

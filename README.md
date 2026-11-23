@@ -84,6 +84,8 @@ leaves your sessions running, and the hub picks them up again when it comes back
   calls, wrapped for the G2 display.
 - Approvals and questions with the exact options the session is offering. Keys are
   only pressed after that dialog has been read back from the terminal.
+- A plan Claude asks to go ahead with: the plan itself in the transcript, and
+  under it the options Claude Code offers for it.
 - Start a new session in a recent project, or resume a past session.
 - A menu to interrupt, compact, or switch the session's model without changing
   your default.
@@ -91,7 +93,9 @@ leaves your sessions running, and the hub picks them up again when it comes back
 
 With the fork's own copy of the app, also:
 
-- A long reply is held at its first line, so you read it from the start.
+- A long reply is held at its first line, so you read it from the start. So is a
+  plan that waits for your go-ahead, and hold to talk tells Claude what to change
+  in it.
 - The screen dims while a session works and comes back to full brightness when it
   finishes or needs you.
 - Tool descriptions fill the lines you allow them and are cut where the display
@@ -178,7 +182,7 @@ It reads eight display settings from the hub, all described under
 
 | Setting | What it does |
 |---|---|
-| `replyFromStart` | holds a long reply at its first line until you scroll on or tap for the latest |
+| `replyFromStart` | holds a long reply, or a plan to approve, at its first line until you scroll on or tap for the latest |
 | `workingBrightness` | dims a session's screen while it works |
 | `latestOnTalk` | jumps to the latest lines when you start to talk |
 | `latestOnPrompt` | jumps to the latest lines when a prompt is sent or a dialog answered, at the desk too |
@@ -328,7 +332,7 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `preventSleep` | true | keep the PC awake (not the display) while the hub runs and the PC is on AC power |
 | `bindTailscaleIP` | false | also listen on the raw Tailscale IP over plain HTTP, for development |
 | `sendNowWhenWorking` | true | send a prompt from the glasses at once when its session is working. Claude Code stops the turn in progress and takes the prompt, as it does when you press its send-now keys, Ctrl+X then Ctrl+S; the hub presses those in place of Enter. With `false`, the prompt waits in Claude Code's queue until the turn ends. Set it to `false` if you have bound those keys to something else in Claude Code's `keybindings.json` |
-| `replyFromStart` | true | on the glasses, hold a reply that arrives while a session is open, and is too long for the screen, at its first line, so you read it from the start; swipe down to read on, tap for the latest. A session you open always starts on its latest lines. With `false`, a session always shows its latest lines, as upstream's app does |
+| `replyFromStart` | true | on the glasses, hold a reply that arrives while a session is open, and is too long for the screen, at its first line, so you read it from the start; swipe down to read on, tap for the latest. A plan Claude asks you to approve is held the same way, with its options under its last lines; any other dialog shows at once. A session you open always starts on its latest lines. With `false`, a session always shows its latest lines, as upstream's app does |
 | `workingBrightness` | 0 | on the glasses, the text brightness of a session's screen while it is working, from 0 (dimmest) to 4 (full). Below 4, the screen dims while Claude works and returns to full when it finishes or needs you; text you have scrolled to, a held reply, and what you dictate stay at full. With `4`, nothing dims, as in upstream's app |
 | `latestOnTalk` | true | on the glasses, when you hold to talk in a session that is scrolled up or held at the start of a reply, jump to its latest lines before listening. With `false`, the view stays where it was, as in upstream's app |
 | `toolLines` | 2 | on the glasses, the lines a tool call's description may take, 1 to 6. A longer description is cut where the display runs out, measured in pixels, and ends in "…" |

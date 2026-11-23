@@ -4,7 +4,7 @@ import { EventEmitter } from "node:events";
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { CLAUDE_PROJECTS_DIR, STATE_FILE } from "./config.mjs";
-import { entryMeta, entryToItems, parseLine, readTailLines, toolLabel, TranscriptTail } from "./transcript.mjs";
+import { entryMeta, entryToItems, parseLine, planItem, readTailLines, toolLabel, TranscriptTail } from "./transcript.mjs";
 import { capture, paneAlive, paneKey, readDialog, readSuggestion, showsWorking, targetFromHook } from "./pane.mjs";
 
 const MAX_ITEMS = 300;
@@ -288,6 +288,11 @@ export class Registry extends EventEmitter {
         } else {
           session.lastTool = { tool: payload.tool_name, detail: payload.tool_label ?? toolLabel(payload.tool_name, payload.tool_input), input: payload.tool_input };
         }
+        if (payload.tool_name === "ExitPlanMode") {
+          // The plan to read before the approval that follows is answered.
+          const plan = planItem(payload.tool_use_id, payload.tool_input?.plan, new Date().toISOString());
+          if (plan) this.addItems(session, [plan], true);
+        }
         break;
       case "PostToolUse":
       case "PostToolUseFailure":
@@ -386,9 +391,12 @@ export class Registry extends EventEmitter {
             if (s.unseenDialogChecks >= 2) {
               s.unseenDialogChecks = 0;
               s.waiting =
-                dialog.kind === "permission"
-                  ? { kind: "permission", tool: s.lastTool?.tool, detail: s.lastTool?.detail || s.activity || dialog.prompt || "" }
-                  : { kind: "question", questions: [], questionIndex: 0, detail: "" };
+                dialog.kind !== "permission"
+                  ? { kind: "question", questions: [], questionIndex: 0, detail: "" }
+                  : dialog.plan
+                    ? // The screen says it is a plan; only the hook that was missed knew which.
+                      { kind: "permission", tool: "ExitPlanMode", detail: s.lastTool?.tool === "ExitPlanMode" ? s.lastTool.detail : "" }
+                    : { kind: "permission", tool: s.lastTool?.tool, detail: s.lastTool?.detail || s.activity || dialog.prompt || "" };
               s.state = "waiting";
               this.changed(s);
               this.emit("attention", s, dialog.kind);

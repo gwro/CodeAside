@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { getTextWidth } from "@evenrealities/pretext";
 import { padTo, sanitize, spread, truncate, wrap } from "../src/text.ts";
-import { layoutItems, shortModel, tidyMarkdown } from "../src/format.ts";
+import { PLAN_FEEDBACK, isPlanApproval, layoutItems, shortModel, tidyMarkdown } from "../src/format.ts";
 import type { Item } from "../src/types.ts";
 
 const W = 568;
@@ -106,4 +106,13 @@ test("model names shorten", () => {
   assert.equal(shortModel("gpt-5.6-sol"), "GPT-5.6-sol");
   assert.equal(shortModel("gemini-3.5-flash"), "Gemini 3.5 Flash");
   assert.equal(shortModel("claude-haiku-4-5-20251001"), "Haiku 4.5");
+});
+
+test("a plan's approval is told from a tool's, and so is its option that takes words", () => {
+  assert.equal(isPlanApproval({ kind: "permission", tool: "ExitPlanMode", detail: "Clear water for the lake" }), true);
+  assert.equal(isPlanApproval({ kind: "permission", tool: "Bash", detail: "Deploy the web build" }), false);
+  assert.equal(isPlanApproval({ kind: "question", questions: [] }), false);
+  assert.equal(isPlanApproval(null), false);
+  const options = ["Yes, and use auto mode", "Yes, manually approve edits", "Tell Claude what to change"];
+  assert.deepEqual(options.map((o) => PLAN_FEEDBACK.test(o)), [false, false, true]);
 });

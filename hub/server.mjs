@@ -62,7 +62,8 @@ export function startHub({ quiet = false, feed = true } = {}) {
     if (feed) printFeed(s, items);
   });
   registry.on("attention", (s, kind) => {
-    const what = kind === "permission" ? `needs permission: ${s.waiting?.detail || ""}` : "has a question for you";
+    const plan = kind === "permission" && s.waiting?.tool === "ExitPlanMode";
+    const what = plan ? `has a plan to approve: ${s.waiting.detail || ""}` : kind === "permission" ? `needs permission: ${s.waiting?.detail || ""}` : "has a question for you";
     if (feed) console.log(color(`  ◆ ${s.project} ${what}`, 33));
     notifier.send(`${s.id}:${kind}`, `${s.project} needs you`, what);
   });
@@ -316,7 +317,14 @@ export function startHub({ quiet = false, feed = true } = {}) {
       }
       if (method === "POST" && action === "answer") {
         const { text } = await readJSON(req);
-        await paneCtl.answerWithText(controllable(s), String(text || ""));
+        const answered = await paneCtl.answerWithText(controllable(s), String(text || ""));
+        if (answered === "plan") {
+          // The plan goes back to be changed, and no hook says so: Claude works on.
+          log(`→ ${s.project}: change the plan: ${text}`);
+          if (s.waiting?.kind === "permission") s.waiting = null;
+          if (s.state === "waiting") s.state = "working";
+          registry.changed(s);
+        }
         return send(res, 200, { ok: true });
       }
       if (method === "POST" && action === "screen") {

@@ -543,6 +543,38 @@ the chord submits as Enter does, so a state that is a moment out of date costs
 nothing. They go through the host's `write`, not its key table, so a host that is
 already running needs no new code.
 
+**Approving a plan.** Claude Code asks to go ahead with a plan through the same
+permission notification as a tool call, with `ExitPlanMode` as the tool, and the
+hub took it for one. The glasses showed "Allow ExitPlanMode", the three stand-in
+options of a tool approval, and no plan. Three things were behind it:
+
+- `readDialog` knew only the "Do you want to…" line. The plan's dialog asks
+  "Claude has written up a plan and is ready to execute. Would you like to
+  proceed?", and offers "Yes, and use auto mode", "Yes, manually approve edits"
+  and "Tell Claude what to change".
+- It read every numbered line in the last thirty as an option, and the plan is
+  drawn right above its dialog. A step of the plan added options, or, as a "5."
+  with no "4." on screen, left the hole that makes a read count as unfinished.
+  Options are now the numbered lines under the line that asks, from the last
+  "1." on. Since "Would you like to proceed?" over a list is also how a reply
+  can end, an approval is only read when no input box is on screen: a dialog
+  takes the box's place.
+- The plan was never an item. It is now a reply, from two sources that key it by
+  the tool call, so it shows once: the call in the transcript and the
+  `PreToolUse` hook for it. The model sends the call with no input, and Claude
+  Code fills the plan in from the plan's file as it writes the call to the
+  transcript. A response that writes that file and asks to go ahead in one go
+  leaves the call empty, and then only the hook, which runs after the file is
+  written, has the plan.
+
+"Tell Claude what to change" is a text box: its number only moves the cursor into
+it, and the next digit pressed is typed there. The hub refuses to press it and
+takes the words through the answer endpoint, as it does for a question's "Type
+something"; Claude Code sends the plan back with them and no hook says so, so the
+hub marks the session as working itself. In the glasses app the plan is held at
+its first line under `replyFromStart`, where every other dialog shows at once
+with the latest lines.
+
 Smaller findings:
 
 - A rule that fills the row comes back from the host's screen read joined to the

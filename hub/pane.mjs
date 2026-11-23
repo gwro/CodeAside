@@ -86,9 +86,20 @@ function splitOptions(line) {
   return out;
 }
 
+/** The line a tool approval asks with. */
+const APPROVAL_PROMPT = /^\s*(Do you want to (?:proceed|make this edit|create|allow)[^?]*\?)/i;
+/** The line the approval of a plan asks with, on its own or after "Claude has written up a plan…". */
+const PLAN_PROMPT = /^\s*((?:\S.*\s)?Would you like to proceed\?)\s*$/i;
+/**
+ * The option of the plan approval that is a text box: choosing it only moves the
+ * cursor there, and what is typed next, digits included, goes into the box.
+ */
+const PLAN_FEEDBACK = /^Tell Claude what to change/i;
+
 /**
  * What is Claude Code showing at the bottom of the pane?
- * @returns {{kind: "permission"|"question"|"trust"|"input"|"unknown", options: string[]}}
+ * @returns {{kind: "permission"|"question"|"trust"|"input"|"unknown", options: string[], prompt?: string, plan?: true}}
+ *   `plan` marks the approval of a plan, which is a permission with options of its own.
  */
 export function readDialog(screen) {
   // A rule that fills the row comes back joined to the row under it, as one wrapped
@@ -96,19 +107,42 @@ export function readDialog(screen) {
   const rows = String(screen).replace(/^(─{20,})(?!─)(?=.*\S)/gm, "$1\n");
   const tail = rows.split("\n").flatMap(splitOptions).filter((l) => l.trim()).slice(-30);
   const joined = tail.join("\n");
+  // The line that asks, when it is an approval. The last such line: the text above
+  // a dialog can hold the same words.
+  let asked = null;
+  let askedAt = -1;
+  let plan = false;
+  tail.forEach((l, i) => {
+    const m = APPROVAL_PROMPT.exec(l) || PLAN_PROMPT.exec(l);
+    if (!m) return;
+    asked = m[1];
+    askedAt = i;
+    plan = !APPROVAL_PROMPT.test(l);
+  });
+  // Options are numbered from 1 and nothing is drawn under a dialog, so they are
+  // the last list on screen that starts at 1, and they stand under the line that
+  // asks. A numbered line above that is text: a step of the plan being approved,
+  // a list in a reply. Read as options, those add options nobody is offered, or
+  // leave a hole in the numbers that makes the whole dialog unreadable.
+  const numbered = tail.map((l) => /^\s*(?:❯\s*)?(\d+)\.\s+(.+?)\s*$/.exec(l));
+  let from = askedAt + 1;
+  numbered.forEach((m, i) => {
+    if (m && m[1] === "1" && i > askedAt) from = i;
+  });
   const options = [];
-  for (const l of tail) {
-    const m = /^\s*(?:❯\s*)?(\d+)\.\s+(.+?)\s*$/.exec(l);
-    if (m) options[Number(m[1]) - 1] = m[2];
-  }
+  numbered.forEach((m, i) => {
+    if (m && i >= from) options[Number(m[1]) - 1] = m[2];
+  });
   // The UI redraws constantly, and a read taken mid-redraw can miss a line. A
   // numbered list with a hole is such a read: compacting it would shift every
   // index after the hole, so the dialog isn't ready rather than wrong.
   const complete = options.length > 0 && Array.from(options).every(Boolean); // from(): holes become undefined, every() alone skips them
   const clean = complete ? options : [];
   if (/Yes, I trust this folder/.test(joined)) return { kind: "trust", options: clean };
-  const asked = /^\s*(Do you want to [^?]*\?)/im.exec(joined)?.[1];
-  if (asked && /Do you want to (proceed|make this edit|create|allow)/i.test(asked) && clean.length) return { kind: "permission", options: clean, prompt: asked };
+  // A dialog takes the place of the input box. With the box on screen, the question
+  // and the list under it are a reply that happens to end that way.
+  const inputBox = /^\s*❯(?!\s*\d+\.\s)/m.test(tail.slice(-4).join("\n"));
+  if (asked && clean.length && !inputBox) return { kind: "permission", options: clean, prompt: asked, ...(plan ? { plan: true } : {}) };
   if (/Enter to select/.test(joined) && clean.length) return { kind: "question", options: clean };
   if (!complete && options.length) return { kind: "unknown", options: [] };
   if (/^\s*❯\s*/m.test(tail.slice(-4).join("\n"))) return { kind: "input", options: [] };
@@ -224,6 +258,10 @@ export async function chooseOption(target, expectedKind, index) {
   if (index < 0 || index >= dialog.options.length || index > 8) {
     throw Object.assign(new Error(`option ${index + 1} not available`), { status: 400 });
   }
+  // Its number would only open the text box, and the next number pressed would be typed into it.
+  if (dialog.plan && PLAN_FEEDBACK.test(dialog.options[index])) {
+    throw Object.assign(new Error("Hold to talk and say what to change"), { status: 409 });
+  }
   await sendKey(target, String(index + 1));
   return dialog.options[index];
 }
@@ -268,15 +306,22 @@ export async function switchModel(target, model, settingsPath) {
   return { restoredDefault: after !== before ? before ?? null : null };
 }
 
-/** Answer a question with free text via its "Type something" option. */
+/**
+ * Answer in free text: a question via its "Type something" option, the approval
+ * of a plan via "Tell Claude what to change", which sends the plan back with
+ * the text as what to change.
+ * @returns {Promise<"question"|"plan">} what was answered
+ */
 export async function answerWithText(target, text) {
   const dialog = await readDialogStable(target);
-  if (dialog.kind !== "question") throw Object.assign(new Error("no question on screen"), { status: 409 });
-  const idx = dialog.options.findIndex((o) => /^Type something/i.test(o));
-  if (idx < 0) throw Object.assign(new Error("question has no free-text option"), { status: 400 });
+  const textOption = dialog.kind === "question" ? /^Type something/i : dialog.plan ? PLAN_FEEDBACK : null;
+  if (!textOption) throw Object.assign(new Error("no question on screen"), { status: 409 });
+  const idx = dialog.options.findIndex((o) => textOption.test(o));
+  if (idx < 0) throw Object.assign(new Error(dialog.plan ? "this plan takes no changes in words" : "question has no free-text option"), { status: 400 });
   await sendKey(target, String(idx + 1));
   await sleep(250);
   await sendPrompt(target, text);
+  return dialog.plan ? "plan" : "question";
 }
 
 export function sessionNameFor(cwd, taken) {

@@ -155,6 +155,22 @@ resize → `resize`. Closing the window drops the pipe and only detaches. A deta
 key (Ctrl+]) is offered too. On attach the client receives the serialized screen
 first, so a session that has been running headless appears exactly as it is.
 
+The client does change one thing in what it relays: every line feed goes to the
+console as IND (ESC D). The session's pseudo-console writes for a terminal, where
+a line feed steps down a row and keeps the column, and it uses one that way, as
+when it paints a row under one it has just erased: `ESC[1;3H ESC[K LF text`. A
+Windows console also takes a line feed back to column 1, unless the program
+sets `DISABLE_NEWLINE_AUTO_RETURN` with `SetConsoleMode`, which Node cannot do;
+resetting LNM (`ESC[20l`) changes nothing, in the console host built into
+Windows or in Windows Terminal's. The text landed at the start of its row, and
+because the pseudo-console repaints only what it believes has changed, the first
+characters stayed there under whatever was drawn on that row next. Scrolling
+Claude Code's fullscreen view, which repaints most rows at every step, left such
+characters on up to three rows in four. IND has no second meaning. A console
+host that doesn't know it (the one built into Windows 10, when not inside
+Windows Terminal) would drop every line feed, so there the line feeds are left
+alone.
+
 Windows Terminal, the legacy console and VS Code's terminal all work, because each
 is just a VT host for the client. Nothing requires Windows Terminal, and Claude
 Code documents no terminal requirement beyond a shell.

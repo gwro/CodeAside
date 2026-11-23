@@ -3,7 +3,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { connect as netConnect } from "node:net";
-import { homedir, userInfo } from "node:os";
+import { homedir, release, userInfo } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -262,6 +262,48 @@ export function isDetachChord(chunk) {
   return false;
 }
 
+const LF = 0x0a;
+const INDEX = Buffer.from("\x1bD");
+
+/**
+ * `chunk` with every line feed sent as IND (ESC D): down one row in the same
+ * column, scrolling at the bottom, which is what a line feed means to a terminal.
+ *
+ * The session's pseudo-console writes for a terminal, and uses a bare line feed
+ * to step down a row and go on in the column it is in, as when it paints a row
+ * under one it has just erased. But the attach client writes to a Windows
+ * console, where a line feed also returns to column 1 unless the program has
+ * asked otherwise through SetConsoleMode, which Node has no way to do. The text
+ * then lands at the start of the row, and since the pseudo-console only repaints
+ * what it believes has changed, its first characters stay there under whatever
+ * is drawn on that row next. Scrolling Claude Code's fullscreen view left such
+ * characters on most rows. IND has no such second meaning.
+ */
+export function lineFeedsAsIndex(chunk) {
+  let at = chunk.indexOf(LF);
+  if (at < 0) return chunk;
+  const parts = [];
+  let from = 0;
+  for (; at >= 0; at = chunk.indexOf(LF, from)) {
+    parts.push(chunk.subarray(from, at), INDEX);
+    from = at + 1;
+  }
+  parts.push(chunk.subarray(from));
+  return Buffer.concat(parts);
+}
+
+/**
+ * Whether the console this process writes to knows IND. Windows Terminal's
+ * console host always has; the one built into Windows has since the builds
+ * after Windows 10's last (19045). An older one would drop the sequence, and
+ * every line feed with it, so there the line feeds are left as they are.
+ */
+export function consoleKnowsIndex() {
+  if (process.platform !== "win32") return false;
+  if (process.env.WT_SESSION) return true;
+  return (Number(release().split(".")[2]) || 0) > 19045;
+}
+
 // What the terminal is told on attach (win32-input-mode on, as ConPTY itself asks
 // at startup) and on detach (every mode the session may have left on, off again).
 const ATTACH_MODES = "\x1b[?9001h";
@@ -287,6 +329,8 @@ export function attach({ pipe = defaultPipe(), id, stdin = process.stdin, stdout
       if (!s.destroyed) s.write(JSON.stringify(msg) + "\n");
     };
     const onResize = () => send({ op: "resize", cols: stdout.columns || 80, rows: stdout.rows || 24 });
+    // Only a console gives a line feed a second meaning; a pipe or a file takes the bytes as they are.
+    const forConsole = stdout.isTTY && consoleKnowsIndex() ? lineFeedsAsIndex : (chunk) => chunk;
     const onInput = (chunk) => {
       if (process.env.CODEASIDE_ATTACH_DEBUG) appendFileSync(process.env.CODEASIDE_ATTACH_DEBUG, `${Date.now()} in ${JSON.stringify(chunk.toString("latin1"))}\n`);
       if (isDetachChord(chunk)) {
@@ -331,10 +375,10 @@ export function attach({ pipe = defaultPipe(), id, stdin = process.stdin, stdout
         }
         stdout.write(ATTACH_MODES);
         const rest = Buffer.from(header.slice(nl + 1), "latin1");
-        if (rest.length) stdout.write(rest);
+        if (rest.length) stdout.write(forConsole(rest));
         return;
       }
-      stdout.write(chunk);
+      stdout.write(forConsole(chunk));
     });
     s.on("close", () => finish({ reason: "lost" }));
     s.on("error", (err) => {

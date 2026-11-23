@@ -1,7 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createServer } from "node:net";
+import pty from "@lydell/node-pty";
+import xterm from "@xterm/headless";
 import { startHost } from "../host/host.mjs";
-import { HostClient, KEYS, attach, resolveClaude, styledScreen } from "../host/client.mjs";
+import { HostClient, KEYS, attach, consoleKnowsIndex, lineFeedsAsIndex, resolveClaude, styledScreen } from "../host/client.mjs";
+
+const { Terminal } = xterm;
 
 const WIN = process.platform === "win32";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -163,6 +168,57 @@ test("sendPrompt ends a prompt with Enter, or with Claude Code's send-now chord"
     c.close();
     for (const s of host.sessions.values()) s.kill();
     host.close();
+  }
+});
+
+test("line feeds go to a console as IND, and nothing else changes", () => {
+  const out = (s) => lineFeedsAsIndex(Buffer.from(s)).toString();
+  // As the pseudo-console paints a row under one it has just erased.
+  assert.equal(out("\x1b[1;3H\x1b[K\nSection 40\x1b[K"), "\x1b[1;3H\x1b[K\x1bDSection 40\x1b[K");
+  assert.equal(out("a\r\nb\n\nc\n"), "a\r\x1bDb\x1bD\x1bDc\x1bD");
+  assert.equal(out("\n"), "\x1bD");
+  // Text in more than one byte a character has no line feed in it.
+  assert.equal(out("❯ ─ ⏵⏵ żółć\n●"), "❯ ─ ⏵⏵ żółć\x1bD●");
+  const plain = Buffer.from("no line feed \x1b[5;10H here");
+  assert.equal(lineFeedsAsIndex(plain), plain, "a chunk without one is passed on as it is");
+});
+
+test("attach keeps the column over a bare line feed in a real console", { skip: (!WIN && "Windows only") || (!consoleKnowsIndex() && "this console host has no IND") }, async () => {
+  // A stand-in for the host that sends what the pseudo-console sends: go to a
+  // column, then step down a row with a bare line feed and write on.
+  const p = `${pipe}-linefeed`;
+  const server = createServer((sock) => {
+    sock.on("error", () => {});
+    sock.once("data", (d) => {
+      const { id } = JSON.parse(d.toString().split("\n")[0]);
+      sock.write(JSON.stringify({ id, ok: true, name: "x" }) + "\n");
+      sock.write("\x1b[2J\x1b[5;10HA\nB\x1b[8;10HC\x1b[K\nD");
+    });
+  });
+  await new Promise((r) => server.listen(p, r));
+  // The attach client in a console of its own, read by a terminal as Windows Terminal reads it.
+  const term = new Terminal({ cols: 60, rows: 14, allowProposedApi: true });
+  const client = new URL("../host/client.mjs", import.meta.url).href;
+  const program = `import { attach } from ${JSON.stringify(client)}; await attach({ pipe: ${JSON.stringify(p)}, id: "x" }).catch(() => {});`;
+  const console_ = pty.spawn(process.execPath, ["--input-type=module", "-e", program], { name: "xterm-256color", cols: 60, rows: 14, cwd: process.cwd(), env: process.env, useConpty: true });
+  console_.onData((d) => term.write(d));
+  term.onData((d) => console_.write(d)); // the console host asks the terminal about itself as it starts
+  try {
+    const columns = () => {
+      const at = {};
+      for (let y = 0; y < term.rows; y++) {
+        const line = term.buffer.active.getLine(y)?.translateToString(true) ?? "";
+        for (const ch of "ABCD") if (line.trim() === ch) at[ch] = [y + 1, line.indexOf(ch) + 1];
+      }
+      return at;
+    };
+    const until = Date.now() + 10000;
+    while (Date.now() < until && Object.keys(columns()).length < 4) await sleep(100);
+    // Each letter after a line feed stands one row down and one column on from the letter before it.
+    assert.deepEqual(columns(), { A: [5, 10], B: [6, 11], C: [8, 10], D: [9, 11] });
+  } finally {
+    console_.kill();
+    server.close();
   }
 });
 

@@ -34,6 +34,18 @@ new build on the glasses.
   refuses to press that option's number, in any build of the app: it would only
   open the box, and the next number pressed would be typed into it.
 - A push for a plan says "has a plan to approve" and names the plan.
+- Scrolling a session's conversation at the PC left the first one or two
+  characters of other lines at the start of rows: `Se  - Orient the map`, where
+  `Se` was the start of a heading drawn there before. The session's
+  pseudo-console steps down a row with a bare line feed and writes on in the
+  same column, and the Windows console the attach client writes to takes a line
+  feed back to column 1 as well. The text landed two columns to the left, and
+  what was drawn on that row next did not cover its start. `codeaside claude`
+  and `codeaside attach` now send every line feed as IND (ESC D), which only
+  steps down. It takes effect the next time you attach: detach with Ctrl+] and
+  run `codeaside attach`. Neither the hub nor the host needs a restart. On a
+  console host without IND (the one built into Windows 10, outside Windows
+  Terminal) the line feeds are left as they were.
 - The hub did not recognise Claude Code's input box in two more cases, both
   seen with Claude Code 2.1.330 and both fixed in the hub: a session Claude Code
   has given a name, which it sets into the end of the rule over the box

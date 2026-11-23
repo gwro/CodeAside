@@ -34,6 +34,15 @@ new build on the glasses.
   refuses to press that option's number, in any build of the app: it would only
   open the box, and the next number pressed would be typed into it.
 - A push for a plan says "has a plan to approve" and names the plan.
+- The hub did not recognise Claude Code's input box in two more cases, both
+  seen with Claude Code 2.1.330 and both fixed in the hub: a session Claude Code
+  has given a name, which it sets into the end of the rule over the box
+  (`──── depth-graded-water-shader ─❯`), and a status line that reaches the last
+  column, which the screen read returns joined to the box under it. In such a
+  session a dialog answered at the desk left the session shown as working when
+  it was idle, the prompt Claude Code suggests was not read under a named rule,
+  and a session started from the glasses with a prompt could wait 20 seconds
+  for a box it did not see.
 
 ## 0.3.1 (glasses app 0.1.2)
 

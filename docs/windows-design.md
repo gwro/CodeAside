@@ -594,6 +594,14 @@ Smaller findings:
   filled to its end, allowing one blank cell: ConPTY pads a short row with
   spaces, so more than one is the end of a line. Because a running host keeps
   its code, `readDialog` also splits numbered options that arrive on one line.
+- The rule over the input box is not always a plain rule at the start of a line.
+  Claude Code sets a session's name into its right end once the session has one
+  (`──── depth-graded-water-shader ─❯`, seen in 2.1.330), so the box follows a
+  single `─`, and a status line that reaches the last column comes back joined
+  to the rule under it, so the rule starts mid-line. `readDialog` and the read
+  of the suggested prompt both missed the box in those sessions. They now share
+  one pattern for a rule, with or without a name, and a rule that follows text
+  on its line gets its line break back first.
 
 - `cmd.exe` splits an unquoted argument at `&`. The sideload QR code lost the token
   that way, and the shell tried to run `token=...`. Commands that go through the

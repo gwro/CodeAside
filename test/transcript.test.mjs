@@ -102,6 +102,10 @@ test("a suggested prompt is dim text alone in the input box", () => {
   assert.equal(suggestionIn(screen(" \x1b[38;2;153;153;153mnot dim\x1b[0m")), null);
   // Live output after the painted screen is not read.
   assert.equal(suggestionIn(`${screen(" ")}\x1b[?2026h${rule}❯ \x1b[2mstale\x1b[0m`), null);
+  // A session with a name has it in the rule over the box, as captured.
+  const named = (input) => `\x1b[0m● Done.\r\n\x1b[38;2;136;136;136m${"─".repeat(173)} depth-graded-water-shader ─\x1b[38;2;153;153;153m❯${input}\r\n\x1b[38;2;136;136;136m${"─".repeat(201)}\x1b[0m${status}`;
+  assert.equal(suggestionIn(named(" \x1b[2mrun the perf shots\x1b[0m")), "run the perf shots");
+  assert.equal(suggestionIn(named(" \x1b[0m      ")), null);
   // No input box on screen, and no screen at all.
   assert.equal(suggestionIn("● Working…\r\n  ⎿ running"), null);
   assert.equal(suggestionIn(""), null);
@@ -201,6 +205,29 @@ test("readDialog finds the input box when the rule above it runs into it", async
   const permission = `${rule} Bash command\n   touch made-by-test.txt\n Do you want to proceed?\n ❯ 1. Yes\n   2. No\n Esc to cancel · Tab to amend`;
   assert.equal(readDialog(permission).kind, "permission");
   assert.equal(readDialog(`reply text\n${rule}`).kind, "unknown", "a rule with nothing under it is no input box");
+});
+
+test("readDialog finds the input box under a rule that carries the session's name", async () => {
+  const { showsWorking } = await import("../hub/pane.mjs");
+  // As the host read Claude Code 2.1.330 in a session it had named: the name is
+  // set into the end of the rule over the box, and the box follows on the same line.
+  const named = `${"─".repeat(173)} depth-graded-water-shader ─`;
+  const rule = "─".repeat(201);
+  const working = `✶ Catapulting… (21m 24s · ↓ 83.5k tokens)\n${named}❯\n${rule}\n  ⏵⏵ auto mode on (shift+tab to cycle) · esc to interrupt`;
+  assert.deepEqual(readDialog(working), { kind: "input", options: [] });
+  assert.equal(showsWorking(working), true);
+  assert.equal(readDialog(`● done\n${named}❯ some typed text\n${rule}\n  ⏵⏵ auto mode on (shift+tab to cycle)`).kind, "input");
+  // A name of several words, as /rename gives.
+  assert.equal(readDialog(`● done\n${"─".repeat(180)} water shader v2 ─❯\n${rule}  ⏵⏵ auto mode on`).kind, "input");
+  // Under a dialog the named rule ends its line, and stays one line.
+  const approval = ` Create file\n hello.txt\n Do you want to create hello.txt?\n ❯ 1. Yes\n   2. Yes, and switch to accept edits for this session (shift+tab)\n   3. No\n Esc to cancel · Tab to amend\n${"─".repeat(179)} add-hello-txt-file ─`;
+  assert.deepEqual(readDialog(approval), { kind: "permission", options: ["Yes", "Yes, and switch to accept edits for this session (shift+tab)", "No"], prompt: "Do you want to create hello.txt?" });
+  // A status line that reaches the last column comes back joined to the box under it, all on one line.
+  const filled = `● Committed.\n✻ Sautéed for 7s · done 5:34 PM${" ".repeat(60)}new task? /clear to save 155.7k tokens · Run claude doctor${rule}❯${rule}  ⏵⏵ auto mode on (shift+tab to cycle)`;
+  assert.deepEqual(readDialog(filled), { kind: "input", options: [] });
+  assert.equal(readDialog(filled.replace("❯", "❯ typed so far")).kind, "input");
+  // A footer under a plain rule is still text after a rule, not a name in one.
+  assert.equal(readDialog(`● done\n${rule}❯\n${rule}  ⏵⏵ auto mode on ─ and a dash`).kind, "input");
 });
 
 test("readDialog separates options that an older host returns as one line", () => {

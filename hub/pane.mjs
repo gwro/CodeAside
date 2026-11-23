@@ -86,6 +86,18 @@ function splitOptions(line) {
   return out;
 }
 
+/**
+ * A rule across the pane, as a pattern. Claude Code sets a session's name, once
+ * it has one, into the right end of the rule over its input box:
+ * "──────── depth-graded-water-shader ─".
+ */
+const RULE = "─{20,}(?: \\S[^─\\r\\n\\x1b]* ─+)?";
+const SGR = "(?:\\x1b\\[[0-9;]*m)*";
+// The whole rule or none of it (a lookahead doesn't give back what it matched): a
+// rule that ends its line in a name is not a plain rule with text after it.
+const RULE_THEN_TEXT = new RegExp(`^(?=(${RULE}))\\1(?!─)(?=.*\\S)`, "gm");
+const INPUT_BOX = new RegExp(`${RULE}${SGR}❯([\\s\\S]*?)(?=${SGR}─{20,}|$)`, "g");
+
 /** The line a tool approval asks with. */
 const APPROVAL_PROMPT = /^\s*(Do you want to (?:proceed|make this edit|create|allow)[^?]*\?)/i;
 /** The line the approval of a plan asks with, on its own or after "Claude has written up a plan…". */
@@ -103,8 +115,10 @@ const PLAN_FEEDBACK = /^Tell Claude what to change/i;
  */
 export function readDialog(screen) {
   // A rule that fills the row comes back joined to the row under it, as one wrapped
-  // row, so the input box reads "────…────❯ text". Put the line break back.
-  const rows = String(screen).replace(/^(─{20,})(?!─)(?=.*\S)/gm, "$1\n");
+  // row, so the input box reads "────…────❯ text". Put the line break back. A row
+  // of text that reaches the last column is joined to the rule under it the same
+  // way, as a status line with a notice at its right end does: break there too.
+  const rows = String(screen).replace(/([^─\s])(─{20,})/g, "$1\n$2").replace(RULE_THEN_TEXT, "$1\n");
   const tail = rows.split("\n").flatMap(splitOptions).filter((l) => l.trim()).slice(-30);
   const joined = tail.join("\n");
   // The line that asks, when it is an approval. The last such line: the text above
@@ -178,7 +192,7 @@ export function suggestionIn(styled) {
   // What an attaching client is sent ends with terminal modes and then live output.
   const cells = String(styled || "").split("\x1b[?")[0];
   // The box sits under a full-width rule, and the two arrive as one wrapped row.
-  const boxes = [...cells.matchAll(/─{20,}(?:\x1b\[[0-9;]*m)*❯([\s\S]*?)(?=(?:\x1b\[[0-9;]*m)*─{20,}|$)/g)];
+  const boxes = [...cells.matchAll(INPUT_BOX)];
   const input = boxes.at(-1)?.[1];
   if (!input) return null;
   let dim = false;

@@ -5,7 +5,7 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
-## Unreleased
+## 0.3.3
 
 One fault in the hub. It needs a restart of the hub (`codeaside service restart`)
 and then works with any build of the glasses app.

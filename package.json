@@ -1,6 +1,6 @@
 {
   "name": "@gwro/codeaside",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Drive your Claude Code sessions from Even Realities G2 smart glasses, natively on Windows: live transcript, approvals, and hold-to-talk voice.",
   "type": "module",
   "bin": {

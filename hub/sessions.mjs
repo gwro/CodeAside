@@ -270,6 +270,9 @@ export class Registry extends EventEmitter {
 
     switch (event) {
       case "SessionStart":
+        // Claude Code sends this after it compacts the conversation too, which it
+        // does on its own in the middle of a turn. That turn goes on.
+        if (payload.source === "compact" && session.state === "working") break;
         session.state = "idle";
         session.waiting = null;
         break;

@@ -5,6 +5,18 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
+## Unreleased
+
+One fault in the hub. It needs a restart of the hub (`codeaside service restart`)
+and then works with any build of the glasses app.
+
+- When Claude Code compacted the conversation in the middle of a turn, the
+  glasses showed the session as finished until its next tool call or reply: the
+  curtain lifted, the text went to full brightness, and the hub's feed printed
+  "done". Claude Code sends the `SessionStart` hook after a compaction as it does
+  when a session starts, and the hub took every one to mean the session is idle.
+  A session that was working when it was compacted now stays working.
+
 ## 0.3.2 (glasses app 0.1.3)
 
 Plans Claude asks to go ahead with, and two faults at the PC. The plan's text and

@@ -184,7 +184,7 @@ It reads eight display settings from the hub, all described under
 |---|---|
 | `replyFromStart` | holds a long reply, or a plan to approve, at its first line until you scroll on or tap for the latest |
 | `workingBrightness` | dims a session's screen while it works |
-| `latestOnTalk` | jumps to the latest lines when you start to talk |
+| `latestOnTalk` | jumps to the latest lines when you talk, once there are words |
 | `latestOnPrompt` | jumps to the latest lines when a prompt is sent or a dialog answered, at the desk too |
 | `toolLines` | how many lines a tool call's description may take |
 | `showSuggestions` | shows the next prompt Claude Code suggests |
@@ -334,7 +334,7 @@ See [SECURITY.md](SECURITY.md) and [docs/privacy.md](docs/privacy.md).
 | `sendNowWhenWorking` | true | send a prompt from the glasses at once when its session is working. Claude Code stops the turn in progress and takes the prompt, as it does when you press its send-now keys, Ctrl+X then Ctrl+S; the hub presses those in place of Enter. With `false`, the prompt waits in Claude Code's queue until the turn ends. Set it to `false` if you have bound those keys to something else in Claude Code's `keybindings.json` |
 | `replyFromStart` | true | on the glasses, hold a reply that arrives while a session is open, and is too long for the screen, at its first line, so you read it from the start; swipe down to read on, tap for the latest. A plan Claude asks you to approve is held the same way, with its options under its last lines; any other dialog shows at once. A session you open always starts on its latest lines. With `false`, a session always shows its latest lines, as upstream's app does |
 | `workingBrightness` | 0 | on the glasses, the text brightness of a session's screen while it is working, from 0 (dimmest) to 4 (full). Below 4, the screen dims while Claude works and returns to full when it finishes or needs you; text you have scrolled to, a held reply, and what you dictate stay at full. With `4`, nothing dims, as in upstream's app |
-| `latestOnTalk` | true | on the glasses, when you hold to talk in a session that is scrolled up or held at the start of a reply, jump to its latest lines before listening. With `false`, the view stays where it was, as in upstream's app |
+| `latestOnTalk` | true | on the glasses, when you hold to talk in a session that is scrolled up or held at the start of a reply, jump to its latest lines once it hears words. A hold with no words in it, such as one started by accident while scrolling, leaves the view where it was. With `false`, the view stays where it was, as in upstream's app |
 | `toolLines` | 2 | on the glasses, the lines a tool call's description may take, 1 to 6. A longer description is cut where the display runs out, measured in pixels, and ends in "…" |
 | `latestOnPrompt` | true | on the glasses, jump to a session's latest lines when a prompt is sent to it or a dialog in it is answered, at the desk as well as from the glasses. With `false`, a view you have scrolled stays where it is |
 | `showSuggestions` | true | on the glasses, show the next prompt Claude Code suggests, when it suggests one, under an idle session's latest lines, marked `→`. Claude Code only draws it in its input box, so the hub reads it off the screen of sessions started with `codeaside claude`; view-only sessions show none. With `false`, the hub doesn't look |

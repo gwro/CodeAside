@@ -14,7 +14,7 @@ export interface Prefs {
   replyFromStart: boolean;
   /** Text brightness while a session works, 0 (dimmest) to 4 (full, so no dimming). */
   workingBrightness: number;
-  /** Jump to a session's latest lines when the user starts to talk to it. */
+  /** Jump to a session's latest lines when the user talks to it, once there are words. */
   latestOnTalk: boolean;
   /** Lines a tool call's description may take before it is cut. */
   toolLines: number;

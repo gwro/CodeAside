@@ -55,7 +55,7 @@ const DEFAULTS = {
   // The text brightness while a session works, from 0 (dimmest) to 4 (full, which
   // means no dimming).
   workingBrightness: 0,
-  // Jump to a session's latest lines when a hold to talk starts in it.
+  // Jump to a session's latest lines when a hold to talk in it has words.
   latestOnTalk: true,
   // Lines a tool call's description may take, 1 to 6. It is cut where the display
   // runs out, measured in pixels.

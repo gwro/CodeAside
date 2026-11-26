@@ -5,6 +5,19 @@ from [GlanceCode](https://github.com/sousyllc/glancecode) 0.6.2 (glasses app 0.3
 and does not track later upstream releases. Upstream's own history up to the fork
 is kept at the end for reference.
 
+## Unreleased (glasses app 0.1.4)
+
+One change in the glasses app. It needs the new build on the glasses (`npm run
+pack:personal`, or `codeaside pair --dev` to sideload) and works with the hub as
+it is.
+
+- A hold to talk that catches no words leaves the view where it was. With
+  `latestOnTalk`, a session that was scrolled up, or held at the start of a
+  reply, jumped to its latest lines the moment a hold began, so a hold started
+  by accident while scrolling lost your place. The jump now waits for the first
+  words of the dictation: about a second into speaking, or when a shorter
+  message has been transcribed.
+
 ## 0.3.3
 
 One fault in the hub. It needs a restart of the hub (`codeaside service restart`)

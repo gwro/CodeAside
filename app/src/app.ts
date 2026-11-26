@@ -52,6 +52,8 @@ export class App {
   private partialTimer: Cancel | null = null;
   private partialInFlight: Promise<void> | null = null;
   private holdStartedAt = 0;
+  /** The session to bring to its latest lines once the dictation has words in it. */
+  private latestOnWords: SessionScreen | null = null;
   private backgroundAt = 0;
   private tickTimer: Cancel | null = null;
 
@@ -247,8 +249,9 @@ export class App {
       return;
     }
     this.chunks = [];
-    // What is said is usually about the latest lines, so show those behind the dictation.
-    if (this.hub.prefs.latestOnTalk && this.top instanceof SessionScreen) this.top.toLatest();
+    // The view moves only once there are words: a hold started by accident, while
+    // scrolling, leaves it where it was.
+    this.latestOnWords = this.hub.prefs.latestOnTalk && this.top instanceof SessionScreen ? this.top : null;
     this.frozenFrame = this.top.frame();
     this.holdStartedAt = Date.now();
     this.voice = { phase: "recording", started: Date.now(), target, partial: "" };
@@ -260,6 +263,15 @@ export class App {
       return;
     }
     this.partialTimer = every(() => this.updatePartial(), PARTIAL_EVERY_MS);
+  }
+
+  /** What is said is usually about the latest lines, so show those behind the dictation. */
+  private showLatestBehindWords() {
+    const screen = this.latestOnWords;
+    this.latestOnWords = null;
+    if (!screen) return;
+    screen.toLatest();
+    if (this.top === screen) this.frozenFrame = screen.frame();
   }
 
   private joinChunks(): Uint8Array {
@@ -284,6 +296,7 @@ export class App {
         const v = this.voice;
         if (v.phase === "recording" && text) {
           v.partial = text;
+          this.showLatestBehindWords();
           this.render();
         }
       })
@@ -335,6 +348,7 @@ export class App {
       this.toast("Didn't catch that");
       return;
     }
+    this.showLatestBehindWords();
     const target = v.target;
     let sent = false;
     const sendNow = async () => {
